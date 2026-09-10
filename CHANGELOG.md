@@ -1,0 +1,65 @@
+# Changelog
+
+## 1.0.0-beta.1
+
+Extracted from the [`paritytech/bcts`](https://github.com/paritytech/bcts) monorepo, where this library was published as `@bcts/multipart-ur`. The public API is unchanged; see [MIGRATION.md](./MIGRATION.md).
+
+---
+
+## History as `@bcts/multipart-ur`
+
+## 1.0.0-beta.6
+
+### Changed
+
+- Workspace version bump
+
+## 1.0.0-beta.5
+
+### Changed
+
+- Workspace version bump
+
+## 1.0.0-beta.4
+
+### Changed
+
+- Dependency sync
+
+## 1.0.0-beta.3
+
+### Changed
+
+- Dependencies bump
+
+## 1.0.0-beta.2
+
+### Changed
+
+- Dependencies bump
+
+## 1.0.0-beta.1
+
+### Changed
+
+- Workspace version bump
+
+## 1.0.0-beta.0
+
+### Changed
+
+- Workspace version bump
+
+## 1.0.0-alpha.24
+
+### Initial release
+
+- TypeScript port of [`bc-mur`](https://github.com/BlockchainCommons/bc-mur-rust) v0.1.0.
+- Single-frame QR code rendering from raw bytes or UR strings.
+- Logo overlay with module-aligned compositing (square or circle clear shape).
+- Animated multipart fountain-coded QR sequences (GIF output).
+- ProRes 4444 encoding via optional ffmpeg integration (CLI / Node only).
+- Frame dump as numbered PNGs for custom pipelines.
+- Configurable QR error correction level, colors, quiet zone, and module size.
+- Density safety checks to prevent unreadable QR codes.
+- CLI tool `mur` with `single`, `animate`, and `frames` subcommands.

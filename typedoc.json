@@ -1,0 +1,23 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": [
+    "src/index.ts"
+  ],
+  "out": "docs",
+  "name": "@blockchaincommons/multipart-ur",
+  "includeVersion": true,
+  "readme": "README.md",
+  "exclude": [
+    "**/*.test.ts",
+    "**/tests/**",
+    "**/node_modules/**"
+  ],
+  "excludePrivate": true,
+  "categorizeByGroup": true,
+  "defaultCategory": "Other",
+  "sort": [
+    "source-order"
+  ],
+  "cleanOutputDir": true,
+  "plugin": []
+}
