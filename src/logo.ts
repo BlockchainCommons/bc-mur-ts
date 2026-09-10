@@ -407,4 +407,7 @@ function ensureRgba8(data: Uint8Array, channels: number, depth: number): Uint8Ar
  *
  * @internal
  */
-export const __testables = { validateFraction, validateClearBorder };
+export const __testables: {
+  validateFraction: (f: number) => number;
+  validateClearBorder: (b: number) => number;
+} = { validateFraction, validateClearBorder };

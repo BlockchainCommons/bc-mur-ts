@@ -399,4 +399,4 @@ export function bilinearScale(
  *
  * @internal
  */
-export const __testables = { LogoLayout };
+export const __testables: { LogoLayout: typeof LogoLayout } = { LogoLayout };
