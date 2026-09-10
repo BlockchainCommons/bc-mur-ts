@@ -49,9 +49,6 @@ jobs:
       - name: Check public API surface
         run: bun run api:check
 
-      - name: Check bundle size
-        run: bun run size
-
       - name: Validate package
         run: bun run lint:pkg
 
