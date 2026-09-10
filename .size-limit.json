@@ -1,0 +1,16 @@
+[
+  {
+    "name": "root entry (import *), minified + gzipped",
+    "path": "dist/index.mjs",
+    "limit": "60 kB",
+    "ignore": [
+      "node:fs/promises",
+      "node:path"
+    ]
+  },
+  {
+    "name": "/gif entry (import *), minified + gzipped",
+    "path": "dist/gif-entry.mjs",
+    "limit": "6 kB"
+  }
+]

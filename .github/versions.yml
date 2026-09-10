@@ -1,0 +1,8 @@
+# Version map: TypeScript package -> Reference implementation
+# Used by workflow automation to track upstream reference versions.
+packages:
+  multipart-ur:
+    npm: "@blockchaincommons/multipart-ur"
+    repo: "BlockchainCommons/bc-mur-rust"
+    version: "0.1.0"
+    commit: "15c7c701d0b7bce8215d092014510595d577f827"
