@@ -1,0 +1,176 @@
+{
+  "name": "@blockchaincommons/multipart-ur",
+  "version": "1.0.0-beta.2",
+  "type": "module",
+  "sideEffects": false,
+  "description": "Multipart UR QR code generator - single-frame and animated fountain-coded QR sequences with optional logo overlay.",
+  "license": "BSD-2-Clause-Patent",
+  "author": {
+    "name": "Blockchain Commons",
+    "email": "info@blockchaincommons.com",
+    "url": "https://www.blockchaincommons.com"
+  },
+  "homepage": "https://github.com/BlockchainCommons/bc-mur-ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BlockchainCommons/bc-mur-ts.git"
+  },
+  "bugs": {
+    "url": "https://github.com/BlockchainCommons/bc-mur-ts/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "dist/index.cjs",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.mts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
+      "default": "./dist/index.mjs"
+    },
+    "./gif": {
+      "import": {
+        "types": "./dist/gif-entry.d.mts",
+        "default": "./dist/gif-entry.mjs"
+      },
+      "require": {
+        "types": "./dist/gif-entry.d.cts",
+        "default": "./dist/gif-entry.cjs"
+      },
+      "default": "./dist/gif-entry.mjs"
+    },
+    "./webp": {
+      "import": {
+        "types": "./dist/webp-entry.d.mts",
+        "default": "./dist/webp-entry.mjs"
+      },
+      "require": {
+        "types": "./dist/webp-entry.d.cts",
+        "default": "./dist/webp-entry.cjs"
+      },
+      "default": "./dist/webp-entry.mjs"
+    },
+    "./svg-logo": {
+      "import": {
+        "types": "./dist/svg-logo-entry.d.mts",
+        "default": "./dist/svg-logo-entry.mjs"
+      },
+      "require": {
+        "types": "./dist/svg-logo-entry.d.cts",
+        "default": "./dist/svg-logo-entry.cjs"
+      },
+      "default": "./dist/svg-logo-entry.mjs"
+    },
+    "./prores": {
+      "import": {
+        "types": "./dist/prores-entry.d.mts",
+        "default": "./dist/prores-entry.mjs"
+      },
+      "require": {
+        "types": "./dist/prores-entry.d.cts",
+        "default": "./dist/prores-entry.cjs"
+      },
+      "default": "./dist/prores-entry.mjs"
+    },
+    "./cli": {
+      "import": {
+        "types": "./dist/cli/index.d.mts",
+        "default": "./dist/cli/index.mjs"
+      },
+      "require": {
+        "types": "./dist/cli/index.d.cts",
+        "default": "./dist/cli/index.cjs"
+      },
+      "default": "./dist/cli/index.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "MIGRATION.md"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint 'src/**/*.ts' 'tests/**/*.ts'",
+    "lint:fix": "eslint 'src/**/*.ts' 'tests/**/*.ts' --fix",
+    "format": "prettier --write 'src/**/*.ts' 'tests/**/*.ts'",
+    "format:check": "prettier --check 'src/**/*.ts' 'tests/**/*.ts'",
+    "typecheck": "tsc --noEmit && tsc --project scripts/tsconfig.json",
+    "api:snapshot": "bun scripts/api-snapshot.ts && bun scripts/api-report.ts --local",
+    "api:check": "bun scripts/api-snapshot.ts --check && bun scripts/api-report.ts",
+    "clean": "rm -rf dist",
+    "docs": "typedoc",
+    "postinstall": "bun scripts/pin-lint-typescript.ts",
+    "prepublishOnly": "npm run build",
+    "lint:pkg": "publint && attw --pack . --profile node16",
+    "check:deps": "bun scripts/check-deps.ts",
+    "baseline:build": "bun scripts/build-baseline.ts",
+    "vectors:generate": "bun scripts/generate-vectors.ts",
+    "test:golden": "vitest run tests/golden-vectors.test.ts",
+    "test:differential": "vitest run tests/differential.test.ts",
+    "size": "size-limit",
+    "test:rust": "cd tests/rust-validation && cargo run --release --locked -- ../vectors/vectors.json",
+    "test:cli-parity": "bun tests/rust-validation/cli-parity.ts"
+  },
+  "keywords": [
+    "multipart-ur",
+    "ur",
+    "qrcode",
+    "blockchain-commons",
+    "fountain",
+    "animated",
+    "encoding"
+  ],
+  "engines": {
+    "node": ">=22.12"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@blockchaincommons/dcbor": "^1.0.0-beta.3",
+    "@eslint/js": "^10.0.1",
+    "@microsoft/api-extractor": "^7.59.1",
+    "@size-limit/preset-small-lib": "^14.0.0",
+    "@types/node": "^26.6.1",
+    "@types/omggif": "^1.0.5",
+    "@typescript-eslint/eslint-plugin": "^8.70.0",
+    "@typescript-eslint/parser": "^8.70.0",
+    "@vitest/coverage-v8": "^5.0.1",
+    "ajv": "^8.20.0",
+    "eslint": "^10.10.0",
+    "fast-check": "^4.10.1",
+    "prettier": "3.9.7",
+    "publint": "^0.3.24",
+    "size-limit": "^14.0.0",
+    "tsdown": "^0.23.0",
+    "typedoc": "^0.28.20",
+    "typescript": "^7.0.2",
+    "typescript6": "npm:typescript@^6.0.3",
+    "vitest": "^5.0.1"
+  },
+  "dependencies": {
+    "@blockchaincommons/uniform-resources": "^1.0.0-beta.1",
+    "@resvg/resvg-wasm": "^2.6.2",
+    "commander": "^15.0.0",
+    "fast-png": "^8.0.0",
+    "gifenc": "^1.0.3",
+    "jpeg-js": "^0.4.4",
+    "omggif": "^1.0.10",
+    "webp-wasm": "^1.0.6"
+  },
+  "bin": {
+    "mur": "./dist/bin/mur.cjs"
+  }
+}
