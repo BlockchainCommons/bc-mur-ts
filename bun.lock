@@ -5,7 +5,7 @@
     "": {
       "name": "@blockchaincommons/multipart-ur",
       "dependencies": {
-        "@blockchaincommons/uniform-resources": "^1.0.0-beta.1",
+        "@blockchaincommons/uniform-resources": "^1.0.0-beta.3",
         "@resvg/resvg-wasm": "^2.6.2",
         "commander": "^15.0.0",
         "fast-png": "^8.0.0",
