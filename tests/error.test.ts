@@ -42,9 +42,9 @@ describe("MurError", () => {
       "ffmpeg not found on PATH — install ffmpeg for ProRes output",
     );
     expect(
-      MurError.ffmpegFailed("ffmpeg exited with status 1", { stderr: "boom" }).details,
+      MurError.ffmpegFailed("ffmpeg exited with status exit status: 1", { stderr: "boom" }).details,
     ).toEqual({
-      message: "ffmpeg exited with status 1",
+      message: "ffmpeg exited with status exit status: 1",
       stderr: "boom",
     });
     expect(MurError.io("ENOENT", { path: "/x" }).details).toEqual({

@@ -1,5 +1,41 @@
 # Migration guide
 
+## From `1.0.0-beta.2` to `1.0.0-beta.3`
+
+Every change brings the library closer to the Rust reference.
+
+- **Colours.** `Color.from` is `Color.fromHex(string)`, the reference's
+  `from_hex`. Tuples are gone: write `new Color(r, g, b, a?)`. The `hex`
+  and `bytes` getters are gone: `toString()` prints `#RRGGBB`/`#RRGGBBAA`
+  and `r`, `g`, `b`, `a` are the bytes. A hex string is measured in UTF-8
+  bytes and a non-ASCII character is reported by its first byte, as the
+  reference does.
+- **`RenderedImage.channels`** is gone; the raster is always RGBA.
+- **Enum parsers.** `parseCorrectionLevel` and `parseClearShape` live on
+  the root entry (the reference's `FromStr`); `/cli` still re-exports them.
+- **Logos.** `Logo.fromImageBytes` decodes PNG and JPEG only, as the
+  reference is built; GIF, BMP and the `/webp` entry (`logoFromWebp`,
+  `decodeWebp`) are gone, and such bytes are `ImageEncode` (`failed to
+  decode image: The image format Gif is not supported`). Every PNG colour
+  type and bit depth now decodes as the reference's `into_rgba8` does:
+  palettes and `tRNS` are expanded (they were read as grey indices) and
+  16-bit samples convert instead of being rejected.
+- **JPEG quality** takes 0–255 and clamps to 1–100 as the reference's
+  encoder does; 0 and 101–255 no longer throw.
+- **`fps`.** `encodeAnimatedGif` writes the reference's saturated delay for
+  any number (`0` → 65 535 centiseconds, negative or `NaN` → 0) instead of
+  throwing; `encodeProres` passes any `fps` to ffmpeg. The CLI's `--fps`
+  accepts `inf`, `infinity` and `nan` like the reference's parser.
+- **Animated GIFs.** Frames of more than 256 colours (a logo) are
+  quantised with the reference's NeuQuant instead of `gifenc`'s quantiser,
+  so decoded frames are the reference's; the bytes still differ (encoders).
+- **Messages.** `FfmpegFailed` reads `ffmpeg exited with status exit
+  status: 1` (or `signal: 9 (SIGKILL)`), as Rust prints an exit status.
+- **CLI.** `--max-fragment-len 0` is a library error (exit 1), as in the
+  reference, not a usage error.
+- **Helpers.** `rasterizeSvg` and `findFfmpeg` are no longer exported; the
+  reference keeps them private too.
+
 ## From `1.0.0-beta.1` to `1.0.0-beta.2`
 
 - **Pixels.** Symbols whose mask or segmentation differed from the Rust
@@ -33,10 +69,10 @@ the API is not.
 ## TL;DR checklist
 
 - [ ] Replace the `@bcts/multipart-ur` dependency with `@blockchaincommons/multipart-ur`.
-- [ ] Import the GIF, WebP, SVG and ProRes encoders from their entries (`/gif`, `/webp`, `/svg-logo`, `/prores`).
+- [ ] Import the GIF, SVG and ProRes encoders from their entries (`/gif`, `/svg-logo`, `/prores`).
 - [ ] Replace positional render arguments with an options object.
 - [ ] Replace `CorrectionLevel.X` / `LogoClearShape.X` with the lower-case strings.
-- [ ] Replace `Color.fromHex`/`Color.new` with `Color.from`; `isTransparent()` is a getter.
+- [ ] `Color.fromHex` stays; replace `Color.new` with `new Color`; `isTransparent()` is a getter.
 - [ ] Replace `Logo.fromRgba(pixels, w, h, f, b, shape)` with `Logo.fromRgba({ width, height, pixels }, { … })` (an `RgbaImage`).
 - [ ] Replace `error.variant.kind` with `error.code`; narrowing on it types `error.details`.
 - [ ] Raise your Node floor to **22.12**; TypeScript **>= 5.7**.
@@ -49,7 +85,6 @@ the API is not.
 + import { encodeAnimatedGif } from "@blockchaincommons/multipart-ur/gif";
 + import { encodeProres } from "@blockchaincommons/multipart-ur/prores";
 + import { logoFromSvg } from "@blockchaincommons/multipart-ur/svg-logo";
-+ import { logoFromWebp } from "@blockchaincommons/multipart-ur/webp";
 ```
 
 The root entry loads no WASM and no CLI framework.
@@ -65,7 +100,7 @@ The root entry loads no WASM and no CLI framework.
 
 Every field has a default: `correction` is `"low"`, or `"high"` when `logo`
 is given; `size` 512; black on white; `quietZone` 1. `foreground` and
-`background` accept a `Color`, a hex string or an `[r, g, b(, a)]` tuple.
+`background` accept a `Color` or a hex string.
 `renderUrQr` accepts a `UR` as well as its string. `size` must be a positive
 integer and `quietZone` a non-negative one (`InvalidParameter`).
 
@@ -74,8 +109,8 @@ integer and `quietZone` a non-negative one (`InvalidParameter`).
 + img.toJpeg({ quality: 90 });
 ```
 
-`RenderedImage` is `{ width, height, pixels, channels: 4 }` with `toPng()`
-and `toJpeg()`; its constructor takes that `RgbaImage` object.
+`RenderedImage` is `{ width, height, pixels }` with `toPng()` and
+`toJpeg()`; its constructor takes that `RgbaImage` object.
 
 ## 3. Frames
 
@@ -100,9 +135,9 @@ index }` object. `writeFramePngs(frames, dir)` is unchanged.
 ```diff
 - CorrectionLevel.Quartile          →  "quartile"
 - LogoClearShape.Circle             →  "circle"
-- correctionLevelFromString("h")    →  parseCorrectionLevel("h")   // from "/cli", accepts the first letter
+- correctionLevelFromString("h")    →  parseCorrectionLevel("h")   // accepts the first letter
 - correctionLevelToString(level)    →  level
-- logoClearShapeFromString("circle") →  "circle" (or parseClearShape from "/cli")
+- logoClearShapeFromString("circle") →  parseClearShape("circle")
 ```
 
 `CORRECTION_LEVELS` and `LOGO_CLEAR_SHAPES` list the values.
@@ -110,11 +145,12 @@ index }` object. `writeFramePngs(frames, dir)` is unchanged.
 ## 5. Colours
 
 ```diff
-- Color.fromHex("#FF8000")   →  Color.from("#FF8000")
-- Color.new(255, 128, 0, 255) →  new Color(255, 128, 0) / Color.from([255, 128, 0])
+- Color.new(255, 128, 0, 255) →  new Color(255, 128, 0)
 - c.isTransparent()          →  c.isTransparent
-+ c.hex, c.bytes, c.equals(other)
++ c.equals(other)
 ```
+
+`Color.fromHex` and `toString()` are unchanged.
 
 ## 6. Logos
 
@@ -123,7 +159,7 @@ index }` object. `writeFramePngs(frames, dir)` is unchanged.
 + Logo.fromRgba({ width: w, height: h, pixels }, { fraction: 0.25, clearBorder: 1, clearShape: "square" })
 - Logo.fromImageBytes(png, 0.25, 1, LogoClearShape.Square)
 + Logo.fromImageBytes(png, { fraction: 0.25, clearBorder: 1 })
-- await Logo.fromImageBytesAsync(webp, …)   →  await logoFromWebp(webp, { … })     // from "/webp"
+- await Logo.fromImageBytesAsync(webp, …)   →  gone: only PNG and JPEG decode, as in the reference
 - await Logo.fromSvg(svg, 0.25, 1, shape)   →  await logoFromSvg(svg, { … })       // from "/svg-logo"
 - initSvgRenderer(wasm)                     →  initSvgRenderer(wasm)               // from "/svg-logo"
 ```
@@ -152,19 +188,3 @@ options). Programmatic use moved from the `SingleCommand`/`AnimateCommand`/
 - await new SingleCommand({ ...SINGLE_DEFAULTS, urString }).exec();
 + await single({ urString });      // from "/cli"; also frames(), animate(), runCli(argv)
 ```
-
-## 9. Floors
-
-| | `@bcts/multipart-ur` | `@blockchaincommons/multipart-ur` |
-|---|---|---|
-| Node | `>= 18` | `>= 22.12` |
-| TypeScript (consumers) | 6.x | `>= 5.7` |
-
-The IIFE / global-script build is gone; use the ESM or CJS entries.
-
-## 10. What did not change
-
-- The fountain part sequence and frame counts, the density limit and
-  `DEFAULT_MAX_MODULES`, every error message.
-- Parity with the Rust reference, now exact for every symbol: see
-  [`RUST_DIVERGENCES.md`](./RUST_DIVERGENCES.md).

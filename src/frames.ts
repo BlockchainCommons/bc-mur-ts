@@ -9,6 +9,7 @@ import { QrMatrix, checkQrDensity } from "./qr-matrix.js";
 import {
   type RenderOptions,
   type RenderedImage,
+  asciiUppercase,
   renderFromMatrix,
   resolveRenderOptions,
   urString,
@@ -72,7 +73,10 @@ export function generateFrames(ur: UR | string, options: FrameOptions = {}): rea
       throw MurError.ur(messageOf(e), e);
     }
     const index = encoder.index;
-    const matrix = QrMatrix.encode(new TextEncoder().encode(part.toUpperCase()), render.correction);
+    const matrix = QrMatrix.encode(
+      new TextEncoder().encode(asciiUppercase(part)),
+      render.correction,
+    );
     if (i === 0 && maxModules !== undefined) {
       checkQrDensity(matrix.width(), maxModules);
     }

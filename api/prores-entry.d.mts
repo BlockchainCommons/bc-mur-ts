@@ -1,8 +1,8 @@
-import { n as QrFrame } from "./frames-BVsJzpXh.mjs";
+import { n as QrFrame } from "./frames-BzJmbtpz.mjs";
 //#region src/prores.d.ts
 /** ProRes encoding: the frame rate and where ffmpeg writes the `.mov`. */
 interface ProresOptions {
-  /** Frames per second, a positive number (default 8). */
+  /** Frames per second (default 8), passed to ffmpeg's `-r` as the reference passes it; ffmpeg rejects what it cannot use (`FfmpegFailed`). */
   fps?: number;
   /** Output file path. */
   outputPath: string;
@@ -14,8 +14,6 @@ interface ProresOptions {
  * (with ffmpeg's stderr in `details.stderr`) when it exits with a failure.
  */
 export declare function encodeProres(frames: readonly QrFrame[], options: ProresOptions): Promise<void>;
-/** The `ffmpeg` executable on `PATH` (`PATHEXT` extensions on Windows), or `FfmpegNotFound`. */
-export declare function findFfmpeg(): Promise<string>;
 //#endregion
 export type { ProresOptions };
 //# sourceMappingURL=prores-entry.d.mts.map

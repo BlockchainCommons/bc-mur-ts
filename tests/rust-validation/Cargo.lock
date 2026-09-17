@@ -698,6 +698,7 @@ version = "0.1.0"
 dependencies = [
  "bc-mur",
  "bc-ur",
+ "gif",
  "hex",
  "image",
  "serde",

@@ -1,5 +1,5 @@
-import { u as CorrectionLevel } from "../frames-BVsJzpXh.mjs";
-import { r as LogoClearShape } from "../logo-BfjBhkoX.mjs";
+import { p as parseCorrectionLevel } from "../frames-BzJmbtpz.mjs";
+import { a as parseClearShape } from "../logo-Cu2tmFob.mjs";
 import { Command } from "commander";
 //#region src/cli/options.d.ts
 /** The drawing arguments every subcommand takes; every optional field has the reference CLI's default. */
@@ -44,13 +44,9 @@ interface SequenceArgs extends DrawArgs {
   /** Exact number of frames (overrides `cycles`). */
   frameCount?: number;
 }
-/** `low`/`medium`/`quartile`/`high`, or the first letter, case-insensitively. */
-export declare function parseCorrectionLevel(s: string): CorrectionLevel;
-/** `square` or `circle`, case-insensitively. */
-export declare function parseClearShape(s: string): LogoClearShape;
 /** @internal A commander parser for an integer in `min`–`max`. */
 export declare function integerArg(min: number, max?: number): (value: string) => number;
-/** @internal A commander parser for a finite number (the library checks its range). */
+/** @internal A commander parser for a number in the spellings clap's `f64` accepts (the library decides what to do with it). */
 export declare function numberArg(): (value: string) => number;
 //#endregion
 //#region src/cli/animate.d.ts
@@ -94,5 +90,5 @@ export declare function program(): Command;
  */
 export declare function runCli(argv?: readonly string[]): Promise<number>;
 //#endregion
-export { type AnimateArgs, type DrawArgs, type FramesArgs, type SequenceArgs, type SingleArgs, parseClearShape as clearShapeArg, parseCorrectionLevel as correctionLevelArg };
+export { type AnimateArgs, type DrawArgs, type FramesArgs, type SequenceArgs, type SingleArgs, parseClearShape as clearShapeArg, parseClearShape, parseCorrectionLevel as correctionLevelArg, parseCorrectionLevel };
 //# sourceMappingURL=index.d.mts.map

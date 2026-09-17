@@ -5,9 +5,8 @@
 import { MurError } from "./error.js";
 import { describe } from "./guards.js";
 
-/** What `Color.from` accepts: a hex string, an RGB(A) tuple, or a `Color`. */
-export type ColorInput =
-  string | Color | readonly [number, number, number] | readonly [number, number, number, number];
+/** A colour option: a `Color`, or a hex string for `Color.fromHex`. */
+export type ColorInput = Color | string;
 
 /** An 8-bit RGBA colour. Instances are frozen. */
 export class Color {
@@ -36,33 +35,12 @@ export class Color {
   /** Fully transparent black. */
   static readonly TRANSPARENT: Color = new Color(0, 0, 0, 0);
 
-  /**
-   * A colour from `#RGB`, `#RRGGBB` or `#RRGGBBAA` (the `#` is optional),
-   * an `[r, g, b]` or `[r, g, b, a]` tuple, or a `Color`.
-   */
-  static from(input: ColorInput): Color {
-    if (input instanceof Color) return input;
-    if (typeof input === "string") return parseHex(input);
-    if (Array.isArray(input) && (input.length === 3 || input.length === 4)) {
-      const [r, g, b, a] = input as readonly number[];
-      return new Color(r, g, b, a ?? 255);
+  /** A colour from `#RGB`, `#RRGGBB` or `#RRGGBBAA` (the `#` is optional); `InvalidColor` otherwise. */
+  static fromHex(s: string): Color {
+    if (typeof s !== "string") {
+      throw MurError.invalidColor(`expected a hex string, got ${describe(s)}`);
     }
-    throw MurError.invalidColor(
-      `expected a hex string, an [r, g, b, a?] tuple, or a Color, got ${describe(input)}`,
-    );
-  }
-
-  /** The `[r, g, b, a]` bytes. */
-  get bytes(): Uint8Array {
-    return Uint8Array.of(this.r, this.g, this.b, this.a);
-  }
-
-  /** `#RRGGBB`, or `#RRGGBBAA` when not fully opaque. */
-  get hex(): string {
-    const r = hexOf(this.r);
-    const g = hexOf(this.g);
-    const b = hexOf(this.b);
-    return this.a === 255 ? `#${r}${g}${b}` : `#${r}${g}${b}${hexOf(this.a)}`;
+    return parseHex(s);
   }
 
   /** Alpha below 3 of 255 counts as transparent (the logo's clear colour falls back to white). */
@@ -75,9 +53,12 @@ export class Color {
     return this.r === other.r && this.g === other.g && this.b === other.b && this.a === other.a;
   }
 
-  /** The same as {@link Color.hex}. */
+  /** `#RRGGBB`, or `#RRGGBBAA` when not fully opaque (the reference's `Display`). */
   toString(): string {
-    return this.hex;
+    const r = hexOf(this.r);
+    const g = hexOf(this.g);
+    const b = hexOf(this.b);
+    return this.a === 255 ? `#${r}${g}${b}` : `#${r}${g}${b}${hexOf(this.a)}`;
   }
 }
 
@@ -95,25 +76,24 @@ function hexOf(byte: number): string {
 }
 
 function parseHex(s: string): Color {
-  const stripped = s.startsWith("#") ? s.slice(1) : s;
-  switch (stripped.length) {
+  // The reference indexes the string's UTF-8 bytes: the length is the byte
+  // length and a non-ASCII character is reported by its first byte.
+  const bytes = new TextEncoder().encode(s.startsWith("#") ? s.slice(1) : s);
+  switch (bytes.length) {
     case 3: {
-      const r = hexNibble(stripped.charCodeAt(0));
-      const g = hexNibble(stripped.charCodeAt(1));
-      const b = hexNibble(stripped.charCodeAt(2));
+      const r = hexNibble(bytes[0]);
+      const g = hexNibble(bytes[1]);
+      const b = hexNibble(bytes[2]);
       return new Color((r << 4) | r, (g << 4) | g, (b << 4) | b, 255);
     }
     case 6:
-      return new Color(hexByte(stripped, 0), hexByte(stripped, 2), hexByte(stripped, 4), 255);
+      return new Color(hexByte(bytes, 0), hexByte(bytes, 2), hexByte(bytes, 4), 255);
     case 8:
-      return new Color(
-        hexByte(stripped, 0),
-        hexByte(stripped, 2),
-        hexByte(stripped, 4),
-        hexByte(stripped, 6),
-      );
+      return new Color(hexByte(bytes, 0), hexByte(bytes, 2), hexByte(bytes, 4), hexByte(bytes, 6));
     default:
-      throw MurError.invalidColor(`expected #RGB, #RRGGBB, or #RRGGBBAA, got: #${stripped}`);
+      throw MurError.invalidColor(
+        `expected #RGB, #RRGGBB, or #RRGGBBAA, got: #${new TextDecoder().decode(bytes)}`,
+      );
   }
 }
 
@@ -124,6 +104,6 @@ function hexNibble(b: number): number {
   throw MurError.invalidColor(`invalid hex digit: ${b}`);
 }
 
-function hexByte(s: string, at: number): number {
-  return (hexNibble(s.charCodeAt(at)) << 4) | hexNibble(s.charCodeAt(at + 1));
+function hexByte(bytes: Uint8Array, at: number): number {
+  return (hexNibble(bytes[at]) << 4) | hexNibble(bytes[at + 1]);
 }

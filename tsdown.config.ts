@@ -5,7 +5,6 @@ export default defineConfig([
     entry: [
       "src/index.ts",
       "src/gif-entry.ts",
-      "src/webp-entry.ts",
       "src/svg-logo-entry.ts",
       "src/prores-entry.ts",
       "src/cli/index.ts",
@@ -40,7 +39,7 @@ export default defineConfig([
     sourcemap: true,
     clean: false,
     shims: true,
-    // CLI is self-contained: bundle every dep (including commander, a devDep).
+    // CLI is self-contained: bundle every dependency.
     deps: {
       onlyBundle: false,
     },

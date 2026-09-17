@@ -11,6 +11,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Correction, LogoSpec, Recipe } from "../vectors/recipes";
+import { BMP_1PX, GIF_1PX, JPEG_8X8, PNG_FIXTURES, PNG_TRUNCATED, WEBP_HEADER } from "./fixtures";
 
 export const CORRECTIONS: readonly Correction[] = ["low", "medium", "quartile", "high"];
 export const SHORT_UR = "ur:bytes/hdcxdwinvezm";
@@ -162,6 +163,31 @@ export function* hand(): Generator<Recipe> {
   yield { k: "frames", length: 10, maxFragmentLen: 100, size: 32 };
   yield { k: "gif", length: 300, maxFragmentLen: 100, frames: 4, fps: 10 };
   yield { k: "gif", length: 300, maxFragmentLen: 100, frames: 1, fps: 1 };
+  // The delay saturates to the GIF's 16-bit field as the reference's cast does.
+  yield { k: "gif", length: 300, maxFragmentLen: 100, frames: 2, fps: 0 };
+  yield { k: "gif", length: 300, maxFragmentLen: 100, frames: 2, fps: -5 };
+  yield { k: "gif", length: 300, maxFragmentLen: 100, frames: 2, fps: 1000 };
+  yield { k: "gif", length: 300, maxFragmentLen: 100, frames: 2, fps: 0.3 };
+  // Frames of more than 256 colours (a gradient logo) go through the quantiser; a solid logo stays under.
+  yield {
+    k: "gif",
+    length: 300,
+    maxFragmentLen: 100,
+    frames: 2,
+    fps: 8,
+    size: 128,
+    logo: logo({ fill: "gradient", width: 40, height: 24 }),
+  };
+  yield {
+    k: "gif",
+    length: 300,
+    maxFragmentLen: 100,
+    frames: 3,
+    fps: 8,
+    size: 200,
+    logo: logo({ fill: "gradient", width: 7, height: 13, clearShape: "circle", fraction: 0.4 }),
+  };
+  yield { k: "gif", length: 300, maxFragmentLen: 100, frames: 2, fps: 8, size: 128, logo: logo() };
   // Colours.
   for (const hex of [
     "#000000",
@@ -173,6 +199,10 @@ export function* hand(): Generator<Recipe> {
     "#GGGGGG",
     "123456",
     "#12345",
+    // Non-ASCII: the reference measures bytes and reports the first UTF-8 byte.
+    "#ÿÿÿ",
+    "#zzÿ",
+    "#ÿ",
   ])
     yield { k: "color", hex };
   yield* boundary();
@@ -240,18 +270,51 @@ export function* boundary(): Generator<Recipe> {
     clearShape: "square",
   };
   yield { k: "svg", svg: "<svg", fraction: 0.25, clearBorder: 1, clearShape: "square" };
+  // Raster logos from bytes: every PNG colour type and bit depth decoded as
+  // the reference's `into_rgba8`, two composited on a render; a JPEG (the
+  // two decoders differ slightly); formats the reference is not built with.
+  for (const [name, fixture] of Object.entries(PNG_FIXTURES))
+    yield { k: "logo-bytes", name: `png-${name}`, hex: fixture.hex };
+  yield {
+    k: "logo-bytes",
+    name: "png-palette8-trns",
+    hex: PNG_FIXTURES["palette8-trns"].hex,
+    render: { payload: SHORT_UR, correction: "high", size: 200, quietZone: 2 },
+  };
+  yield {
+    k: "logo-bytes",
+    name: "png-rgba8-adam7",
+    hex: PNG_FIXTURES["rgba8-adam7"].hex,
+    render: { payload: hexOf(200, 5), correction: "high", size: 256, quietZone: 1 },
+  };
+  yield { k: "logo-bytes", name: "jpeg-8x8", hex: JPEG_8X8 };
+  yield {
+    k: "logo-bytes",
+    name: "jpeg-8x8",
+    hex: JPEG_8X8,
+    render: { payload: SHORT_UR, correction: "high", size: 200, quietZone: 2 },
+  };
+  yield { k: "logo-bytes", name: "gif-1px", hex: GIF_1PX };
+  yield { k: "logo-bytes", name: "bmp-1px", hex: BMP_1PX };
+  yield { k: "logo-bytes", name: "webp-header", hex: WEBP_HEADER };
+  yield { k: "logo-bytes", name: "png-truncated", hex: PNG_TRUNCATED };
+  yield { k: "logo-bytes", name: "garbage", hex: "00010203" };
+  yield { k: "logo-bytes", name: "empty", hex: "" };
   // JPEG: decoded pixels stay within the epsilon at every quality.
   for (const quality of [1, 50, 90, 100])
     yield { k: "jpeg", payload: SHORT_UR, correction: "low", size: 256, quality };
+  // The encoders clamp 0 to 1 and anything above 100 to 100.
+  for (const quality of [0, 101, 255])
+    yield { k: "jpeg", payload: SHORT_UR, correction: "low", size: 128, quality };
   yield { k: "jpeg", payload: hexOf(200, 5), correction: "high", size: 128, quality: 90 };
   // Argument domains (JS-only): what the boundary rejects.
   const domain: Extract<Recipe, { k: "domain" }>[] = [
-    { k: "domain", op: "colorTuple", args: [[256, 0, 0]] },
-    { k: "domain", op: "colorTuple", args: [[-1, 0, 0]] },
-    { k: "domain", op: "colorTuple", args: [[1.5, 2, 3]] },
-    { k: "domain", op: "colorTuple", args: [[0, 0, 0, 300]] },
-    { k: "domain", op: "colorTuple", args: [[10, 20, 30]] },
+    { k: "domain", op: "colorValue", args: [[10, 20, 30]] },
+    { k: "domain", op: "colorValue", args: [42] },
     { k: "domain", op: "colorNew", args: [300, 0, 0] },
+    { k: "domain", op: "colorNew", args: [-1, 0, 0] },
+    { k: "domain", op: "colorNew", args: [1.5, 2, 3] },
+    { k: "domain", op: "colorNew", args: [0, 0, 0, 300] },
     { k: "domain", op: "colorNew", args: [1, 2, 3, 4] },
     { k: "domain", op: "renderSize", args: [0] },
     { k: "domain", op: "renderSize", args: [1.5] },
@@ -264,9 +327,9 @@ export function* boundary(): Generator<Recipe> {
     { k: "domain", op: "renderUrValue", args: ["object"] },
     { k: "domain", op: "renderUrValue", args: ["number"] },
     { k: "domain", op: "renderQrValue", args: ["hello"] },
-    { k: "domain", op: "jpegQuality", args: [0] },
     { k: "domain", op: "jpegQuality", args: [1.5] },
-    { k: "domain", op: "jpegQuality", args: [101] },
+    { k: "domain", op: "jpegQuality", args: [256] },
+    { k: "domain", op: "jpegQuality", args: [-1] },
     { k: "domain", op: "jpegQuality", args: [100] },
     { k: "domain", op: "framesCycles", args: [1.5] },
     { k: "domain", op: "framesCycles", args: [-1] },
@@ -286,12 +349,7 @@ export function* boundary(): Generator<Recipe> {
     { k: "domain", op: "logoOptions", args: [0.005, 0, "circle"] },
     { k: "domain", op: "renderedImage", args: [4, 4, 10] },
     { k: "domain", op: "renderedImage", args: [4, 4, 64] },
-    { k: "domain", op: "gifFps", args: [0] },
-    { k: "domain", op: "gifFps", args: [-5] },
-    { k: "domain", op: "gifFps", args: [8] },
-    { k: "domain", op: "logoFormat", args: ["gif"] },
-    { k: "domain", op: "logoFormat", args: ["bmp"] },
-    { k: "domain", op: "logoFormat", args: ["garbage"] },
+    { k: "domain", op: "gifFps", args: ["8"] },
   ];
   yield* domain;
 }

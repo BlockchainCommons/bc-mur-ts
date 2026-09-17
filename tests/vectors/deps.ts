@@ -9,6 +9,7 @@
 import { createHash } from "node:crypto";
 import { decode as decodePng } from "fast-png";
 import * as jpeg from "jpeg-js";
+import { GifReader } from "omggif";
 import { cbor } from "@blockchaincommons/dcbor";
 import { UR } from "@blockchaincommons/uniform-resources";
 import {
@@ -30,28 +31,10 @@ const enc = (s: string): Uint8Array => new TextEncoder().encode(s);
 /** A `bytes` UR string of `bytes`, from the working tree's siblings (the string form is what both modules accept). */
 export const urFromBytes = (bytes: Uint8Array): string => UR.from("bytes", cbor(bytes)).toString();
 
-/** A one-pixel GIF89a. */
-const GIF_1PX = Uint8Array.from([
-  0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 1, 0, 1, 0, 0x80, 0, 0, 0, 0, 0, 0xff, 0xff, 0xff, 0x21, 0xf9,
-  4, 1, 0, 0, 0, 0, 0x2c, 0, 0, 0, 0, 1, 0, 1, 0, 0, 2, 2, 0x44, 1, 0, 0x3b,
-]);
-/** A one-pixel 24-bit BI_RGB BMP. */
-const BMP_1PX = (() => {
-  const b = new Uint8Array(58);
-  b[0] = 0x42;
-  b[1] = 0x4d;
-  b[10] = 54;
-  b[14] = 40;
-  b[18] = 1;
-  b[22] = 1;
-  b[26] = 1;
-  b[28] = 24;
-  return b;
-})();
-
 export function adapterFor(m: any): VectorApi {
+  const colorFromHex = (hex: string): any => (m.Color.fromHex ?? m.Color.from)(hex);
   const colorBytes = (hex: string): [number, number, number, number] => {
-    const c = m.Color.from(hex);
+    const c = colorFromHex(hex);
     return [c.r, c.g, c.b, c.a];
   };
   const logoOf = (spec: RenderSpec["logo"]): any =>
@@ -82,10 +65,10 @@ export function adapterFor(m: any): VectorApi {
   const dims = (o: { width: number; height: number }): string => `${o.width}x${o.height}`;
   const domain = (op: DomainOp, a: readonly unknown[]): string => {
     switch (op) {
-      case "colorTuple":
-        return m.Color.from(a[0]).hex;
+      case "colorValue":
+        return String(colorFromHex(a[0] as string));
       case "colorNew":
-        return new m.Color(...(a as number[])).hex;
+        return String(new m.Color(...(a as number[])));
       case "renderSize":
         return dims(m.renderUrQr(SHORT_UR, { size: a[0] }));
       case "renderQuietZone":
@@ -138,10 +121,6 @@ export function adapterFor(m: any): VectorApi {
         }).length > 0
           ? "ok"
           : "empty";
-      case "logoFormat": {
-        const bytes = a[0] === "gif" ? GIF_1PX : a[0] === "bmp" ? BMP_1PX : enc(String(a[0]));
-        return dims(m.Logo.fromImageBytes(bytes));
-      }
     }
   };
   return {
@@ -183,16 +162,29 @@ export function adapterFor(m: any): VectorApi {
       };
     },
     gif: (r) => {
-      const frames = framesOf(r.length, { maxFragmentLen: r.maxFragmentLen });
+      const frames = framesOf(r.length, {
+        maxFragmentLen: r.maxFragmentLen,
+        ...(r.size !== undefined ? { size: r.size } : {}),
+        ...(r.logo !== undefined ? { logo: logoOf(r.logo) } : {}),
+      });
       const bytes = m.encodeAnimatedGif(frames.slice(0, r.frames), { fps: r.fps });
+      const reader = new GifReader(bytes);
+      const hashes: string[] = [];
+      for (let i = 0; i < reader.numFrames(); i++) {
+        const rgba = new Uint8Array(reader.width * reader.height * 4);
+        reader.decodeAndBlitFrameRGBA(i, rgba);
+        hashes.push(sha(rgba));
+      }
       return {
-        frames: countGifFrames(bytes),
-        width: frames[0].image.width,
-        height: frames[0].image.height,
+        frames: reader.numFrames(),
+        width: reader.width,
+        height: reader.height,
+        delay: reader.frameInfo(0).delay,
+        hashes,
       };
     },
     color: (hex) => {
-      const c = m.Color.from(hex);
+      const c = colorFromHex(hex);
       return `${c.toString()} transparent=${c.isTransparent}`;
     },
     svg: async (spec: SvgSpec) => {
@@ -223,6 +215,16 @@ export function adapterFor(m: any): VectorApi {
           max = Math.max(max, Math.abs(img.pixels[i + c] - decoded.data[i + c]));
       return { width: decoded.width, height: decoded.height, within: max <= JPEG_EPSILON };
     },
+    logoBytes: (r) => {
+      const logo = m.Logo.fromImageBytes(unhex(r.hex));
+      const out: { width: number; height: number; pixels: string; render?: string } = {
+        width: logo.width,
+        height: logo.height,
+        pixels: sha(logo.pixels),
+      };
+      if (r.render) out.render = sha(render(r.render, logo).pixels);
+      return out;
+    },
     domain,
     errorCode: (e) => {
       const x: any = e;
@@ -230,28 +232,6 @@ export function adapterFor(m: any): VectorApi {
       return undefined;
     },
   };
-}
-
-/** Counts the image descriptors in a GIF byte stream (a decoded-structure check, not encoder bytes). */
-export function countGifFrames(bytes: Uint8Array): number {
-  let count = 0;
-  let i = 13 + ((bytes[10] & 0x80) !== 0 ? 3 << ((bytes[10] & 7) + 1) : 0);
-  while (i < bytes.length) {
-    const b = bytes[i];
-    if (b === 0x3b) break;
-    if (b === 0x21) {
-      i += 2;
-      while (i < bytes.length && bytes[i] !== 0) i += bytes[i] + 1;
-      i++;
-    } else if (b === 0x2c) {
-      count++;
-      const flags = bytes[i + 9];
-      i += 10 + ((flags & 0x80) !== 0 ? 3 << ((flags & 7) + 1) : 0) + 1;
-      while (i < bytes.length && bytes[i] !== 0) i += bytes[i] + 1;
-      i++;
-    } else break;
-  }
-  return count;
 }
 
 /** The frozen baseline bundle's adapter. */

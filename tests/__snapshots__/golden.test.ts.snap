@@ -24,7 +24,7 @@ count=18 width=64 indices=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18 first=45c
   "## frames 500B frag100 64px ×2
 count=12 width=64 indices=1,2,3,4,5,6,7,8,9,10,11,12 first=45cc1dc366408267bf221e3b5bf9269fb357155dd0ee4b0913ad581f1e761102",
   "## gif 500B frag100 3f 5fps
-frames=3 32x32",
+frames=3 32x32 delay=20 hashes=8f6b8cdbe088eb6c1cbda2a593d8096c46a21f75cf33538ccda4af8c6c73b98d,38686ab13008e277a057c2611e8dfe3dc1a4a2115fc6d2ffcbe7e233b13f24a4,de6f1528395ac575ce7c1ead8b0189f51997bbe251cd0e39a1415e27805c11e7",
   "## density 01203f5e7d9cbbdaf9183756 low max117
 throw:QrCodeTooDense",
   "## color #FF8000
@@ -198,9 +198,23 @@ throw:QrCodeTooDense",
   "## frames 10B frag100 32px
 count=3 width=32 indices=1,2,3 first=2233cf9808d77a8835aed305b5bbd1d1e5e47b8fb31b2810de69c23b1d83e1d7",
   "## gif 300B frag100 4f 10fps
-frames=4 32x32",
+frames=4 32x32 delay=10 hashes=e81aa3ff21ff46aac1e3d2a4a8c6cbacc5a8a5da228304b30851411f22fe442c,439996c19baff24544bced3492f59faff484ebaf25e1f8b2dd0d054611d3d897,ef82fde5dbb60a39b3f6a1c3ae074bd9584e17d24973327c0b7dded98720ba86,5cc400a1433a10987192e149d2bfd1e44243a115aded9eb4c722fa88fbe5d1ee",
   "## gif 300B frag100 1f 1fps
-frames=1 32x32",
+frames=1 32x32 delay=100 hashes=e81aa3ff21ff46aac1e3d2a4a8c6cbacc5a8a5da228304b30851411f22fe442c",
+  "## gif 300B frag100 2f 0fps
+frames=2 32x32 delay=65535 hashes=e81aa3ff21ff46aac1e3d2a4a8c6cbacc5a8a5da228304b30851411f22fe442c,439996c19baff24544bced3492f59faff484ebaf25e1f8b2dd0d054611d3d897",
+  "## gif 300B frag100 2f -5fps
+frames=2 32x32 delay=0 hashes=e81aa3ff21ff46aac1e3d2a4a8c6cbacc5a8a5da228304b30851411f22fe442c,439996c19baff24544bced3492f59faff484ebaf25e1f8b2dd0d054611d3d897",
+  "## gif 300B frag100 2f 1000fps
+frames=2 32x32 delay=0 hashes=e81aa3ff21ff46aac1e3d2a4a8c6cbacc5a8a5da228304b30851411f22fe442c,439996c19baff24544bced3492f59faff484ebaf25e1f8b2dd0d054611d3d897",
+  "## gif 300B frag100 2f 0.3fps
+frames=2 32x32 delay=333 hashes=e81aa3ff21ff46aac1e3d2a4a8c6cbacc5a8a5da228304b30851411f22fe442c,439996c19baff24544bced3492f59faff484ebaf25e1f8b2dd0d054611d3d897",
+  "## gif 300B frag100 2f 8fps 128px logo gradient 40x24
+frames=2 128x128 delay=13 hashes=eee5f5259aeba5fbdf5fbdcd413f19b1d35b49f2b47fdd46ed50dae288c3fa9a,a3ece9aebcb52f88920bfa30eb2f2344da0c742a089baf14ae996b7e50e05f46",
+  "## gif 300B frag100 3f 8fps 200px logo gradient 7x13
+frames=3 200x200 delay=13 hashes=3461e46817020226bdea1cbdf90fad3642821d2eef7d46f2897700d89c6c74cb,667d8553c479f759c464d0c290cd280d2c2c4890c9d9121589b12d2668f6e357,8e93113917eb8d3fde263c8a880aa5d772810fd4cb6a012d8fc2ade456f13701",
+  "## gif 300B frag100 2f 8fps 128px logo solid 32x32
+frames=2 128x128 delay=13 hashes=d0ecbb91f648664037ce2eb6704c77263802e9b76471dd27b6ba12d2d19fd66e,0cd16fa8d6c3df1506daa37d536143793d9bcfc7a371f394e6af311e0d24f7f7",
   "## color #000000
 #000000 transparent=false",
   "## color #FFFFFF
@@ -218,6 +232,12 @@ throw:InvalidColor",
   "## color 123456
 #123456 transparent=false",
   "## color #12345
+throw:InvalidColor",
+  "## color #ÿÿÿ
+throw:InvalidColor",
+  "## color #zzÿ
+throw:InvalidColor",
+  "## color #ÿ
 throw:InvalidColor",
   "## matrix 414243313233343536373839 low (mixed-mode)
 25
@@ -267,6 +287,66 @@ throw:QrCodeTooDense",
 512x512 pixels=30e14955ebf1352266dc2ff8067e68104607e750abb9d3b36582b8af909fcb58",
   "## svg 4B f0.25 b1 square
 throw:SvgRender",
+  "## logo-bytes png-rgba8 89B
+3x2 pixels=7dc031705061e23314eea970b3d5f79a5be3680d133d722b2d7a91404dee524a",
+  "## logo-bytes png-rgb8 81B
+3x2 pixels=5af1fc6b9f4aa08ea11026dc435c953a720649e79790ff6dabdb7c1d215fb883",
+  "## logo-bytes png-rgb8-trns 101B
+3x2 pixels=7c12f28d7674304821f7d807850ca882a604f48dc79c5e569221265f424d04de",
+  "## logo-bytes png-gray8 70B
+4x1 pixels=2e83c46d9829fd4d5660c341f4789c155d7fc746b358bd828ad44c4e41789b45",
+  "## logo-bytes png-gray8-trns 84B
+4x1 pixels=bf96db981dfab1e22c5e1ddc14848a09ec30005bf8a95b6dc3592b066123b8f6",
+  "## logo-bytes png-gray1 67B
+8x1 pixels=343b0906666bac9d53f7633984fa912d016ce5870f5035a10b4d22a1d5624a64",
+  "## logo-bytes png-gray2 67B
+4x1 pixels=b3101a7bf84fa4b1d102bc46be6d57e3813675025560316c3923af4a1fbdb932",
+  "## logo-bytes png-gray4-trns 82B
+4x1 pixels=fc52576410bfb7c2ce3d502994c648f433ba94a9cd949814d6674241e5d04985",
+  "## logo-bytes png-ga8 75B
+2x2 pixels=217076abb12e7cd80c732e09aa5afe280b917dcec87e133725609edc177683fa",
+  "## logo-bytes png-palette8 86B
+2x1 pixels=e0b8f3a91e53b2aee7be9493043f0d54efa0b1d7bfa018ea8f192295a7229836",
+  "## logo-bytes png-palette8-trns 108B
+4x1 pixels=63ba2ef388880d750494fe5188a311f5d5eadc74a94ed7310c5b092c6a8009a4",
+  "## logo-bytes png-palette2 91B
+4x1 pixels=5b48123a1babb9efe5965cb75028f1dbd7083cfbc848cd2abb380cbc809f9d73",
+  "## logo-bytes png-palette1 85B
+8x1 pixels=343b0906666bac9d53f7633984fa912d016ce5870f5035a10b4d22a1d5624a64",
+  "## logo-bytes png-palette4-trns 107B
+3x2 pixels=3aabf44bf4b01503c196e4ed7b343f4c3ae568feff252def760ae21cb64b24bc",
+  "## logo-bytes png-rgba16 96B
+2x2 pixels=ac14446d18436bccc8077a30f64ce2bb3ed7bba5ed916a3956478647ca5769c7",
+  "## logo-bytes png-gray16 72B
+3x1 pixels=0654cbdc3755d5ec1706594b77dac6dd6554aca37ba15960d05c9296bc201275",
+  "## logo-bytes png-gray16-trns 86B
+3x1 pixels=e6347f73808663c1566876e1b8db917d9297061f8fb7e406a9e498a584759ca1",
+  "## logo-bytes png-ga16 74B
+2x1 pixels=2628816d663460903807ebff23789db34cbec12960993ad4500f6ab5dc75d516",
+  "## logo-bytes png-rgb16-trns 102B
+3x1 pixels=9e92e6ba33878286bf0b6b561f993626f3a536426f21cd3e10e076d6b89e1517",
+  "## logo-bytes png-rgba8-adam7 180B
+5x5 pixels=4a2fdbeed2787b31f0643a82a757b76b02fe98caad6f6385abf1a262460f2122",
+  "## logo-bytes png-palette8-trns 108B on ur:bytes/hdcxdwi high 200px qz2
+4x1 pixels=63ba2ef388880d750494fe5188a311f5d5eadc74a94ed7310c5b092c6a8009a4 render=3dc6c351cca93cf6d0ee95c2c0429d1ea12c1fb0f5fdeb1103d3414de50f957c",
+  "## logo-bytes png-rgba8-adam7 180B on 0524436281a0bfde high 256px qz1
+5x5 pixels=4a2fdbeed2787b31f0643a82a757b76b02fe98caad6f6385abf1a262460f2122 render=b70addfea7cd5800e498ad0a9aab503ee82fc3fc7f1e6dcd9d17ad8ee12d468d",
+  "## logo-bytes jpeg-8x8 636B
+8x8 pixels=a16cd9be55672836b006a37b71ef1b41b74a200b5c6aef1eb9434f8268d05592",
+  "## logo-bytes jpeg-8x8 636B on ur:bytes/hdcxdwi high 200px qz2
+8x8 pixels=a16cd9be55672836b006a37b71ef1b41b74a200b5c6aef1eb9434f8268d05592 render=e694d74587d24923555282da3916599c2a2e189aef2bd8d54713e6bb9b3d7717",
+  "## logo-bytes gif-1px 42B
+throw:ImageEncode",
+  "## logo-bytes bmp-1px 58B
+throw:ImageEncode",
+  "## logo-bytes webp-header 20B
+throw:ImageEncode",
+  "## logo-bytes png-truncated 12B
+throw:ImageEncode",
+  "## logo-bytes garbage 4B
+throw:ImageEncode",
+  "## logo-bytes empty 0B
+throw:ImageEncode",
   "## jpeg ur:bytes/hdcxdwinvezm low 256px q1
 256x256 beyond 25",
   "## jpeg ur:bytes/hdcxdwinvezm low 256px q50
@@ -275,19 +355,25 @@ throw:SvgRender",
 256x256 within 25",
   "## jpeg ur:bytes/hdcxdwinvezm low 256px q100
 256x256 within 25",
+  "## jpeg ur:bytes/hdcxdwinvezm low 128px q0
+128x128 beyond 25",
+  "## jpeg ur:bytes/hdcxdwinvezm low 128px q101
+128x128 within 25",
+  "## jpeg ur:bytes/hdcxdwinvezm low 128px q255
+128x128 within 25",
   "## jpeg 0524436281a0bfdefd1c3b5a high 128px q90
 128x128 within 25",
-  "## domain colorTuple [[256,0,0]]
+  "## domain colorValue [[10,20,30]]
 throw:InvalidColor",
-  "## domain colorTuple [[-1,0,0]]
+  "## domain colorValue [42]
 throw:InvalidColor",
-  "## domain colorTuple [[1.5,2,3]]
-throw:InvalidColor",
-  "## domain colorTuple [[0,0,0,300]]
-throw:InvalidColor",
-  "## domain colorTuple [[10,20,30]]
-#0A141E",
   "## domain colorNew [300,0,0]
+throw:InvalidColor",
+  "## domain colorNew [-1,0,0]
+throw:InvalidColor",
+  "## domain colorNew [1.5,2,3]
+throw:InvalidColor",
+  "## domain colorNew [0,0,0,300]
 throw:InvalidColor",
   "## domain colorNew [1,2,3,4]
 #01020304",
@@ -313,11 +399,11 @@ throw:InvalidParameter",
 throw:InvalidParameter",
   "## domain renderQrValue ["hello"]
 throw:InvalidParameter",
-  "## domain jpegQuality [0]
-throw:InvalidParameter",
   "## domain jpegQuality [1.5]
 throw:InvalidParameter",
-  "## domain jpegQuality [101]
+  "## domain jpegQuality [256]
+throw:InvalidParameter",
+  "## domain jpegQuality [-1]
 throw:InvalidParameter",
   "## domain jpegQuality [100]
 ok",
@@ -357,18 +443,8 @@ throw:InvalidParameter",
 throw:InvalidParameter",
   "## domain renderedImage [4,4,64]
 ok",
-  "## domain gifFps [0]
+  "## domain gifFps ["8"]
 throw:InvalidParameter",
-  "## domain gifFps [-5]
-throw:InvalidParameter",
-  "## domain gifFps [8]
-ok",
-  "## domain logoFormat ["gif"]
-1x1",
-  "## domain logoFormat ["bmp"]
-1x1",
-  "## domain logoFormat ["garbage"]
-throw:ImageEncode",
 ]
 `;
 
@@ -396,7 +472,7 @@ count=18 width=64 indices=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18 first=45c
   "## frames 500B frag100 64px ×2
 count=12 width=64 indices=1,2,3,4,5,6,7,8,9,10,11,12 first=45cc1dc366408267bf221e3b5bf9269fb357155dd0ee4b0913ad581f1e761102",
   "## gif 500B frag100 3f 5fps
-frames=3 32x32",
+frames=3 32x32 delay=20 hashes=8f6b8cdbe088eb6c1cbda2a593d8096c46a21f75cf33538ccda4af8c6c73b98d,38686ab13008e277a057c2611e8dfe3dc1a4a2115fc6d2ffcbe7e233b13f24a4,de6f1528395ac575ce7c1ead8b0189f51997bbe251cd0e39a1415e27805c11e7",
   "## density 01203f5e7d9cbbdaf9183756 low max117
 throw:QrCodeTooDense",
   "## color #FF8000

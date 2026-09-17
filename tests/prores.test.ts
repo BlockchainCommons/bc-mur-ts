@@ -22,11 +22,15 @@ vi.mock("node:fs/promises", async (importOriginal) => {
 
 const { encodeProres, findFfmpeg } = await import("../src/prores.js");
 
-function fakeProcess(exitCode: number, stderr = ""): EventEmitter & { stderr: EventEmitter } {
+function fakeProcess(
+  exitCode: number | null,
+  stderr = "",
+  signal: string | null = null,
+): EventEmitter & { stderr: EventEmitter } {
   const proc = Object.assign(new EventEmitter(), { stderr: new EventEmitter() });
   process.nextTick(() => {
     if (stderr !== "") proc.stderr.emit("data", Buffer.from(stderr));
-    proc.emit("close", exitCode);
+    proc.emit("close", exitCode, signal);
   });
   return proc;
 }
@@ -80,16 +84,39 @@ describe("encodeProres", () => {
     } catch (e) {
       expect(MurError.isMurError(e) && e.is("FfmpegFailed")).toBe(true);
       if (MurError.isMurError(e) && e.is("FfmpegFailed")) {
-        expect(e.message).toBe("ffmpeg failed: ffmpeg exited with status 1");
+        expect(e.message).toBe("ffmpeg failed: ffmpeg exited with status exit status: 1");
         expect(e.details.stderr).toBe("muxer error");
       }
     }
   });
 
-  it("rejects a non-positive fps and an empty output path", async () => {
-    await expect(encodeProres(frames, { fps: 0, outputPath: "/tmp/x.mov" })).rejects.toMatchObject({
-      code: "InvalidParameter",
-    });
+  it("a signal is reported as Rust's ExitStatus prints it", async () => {
+    accessMock.mockResolvedValue(undefined);
+    spawnMock.mockImplementation(() => fakeProcess(null, "", "SIGKILL"));
+    await expect(encodeProres(frames, { outputPath: "/tmp/out.mov" })).rejects.toThrow(
+      "ffmpeg failed: ffmpeg exited with status signal: 9 (SIGKILL)",
+    );
+  });
+
+  it("passes any fps to ffmpeg as the reference formats it; a non-number and an empty output path are InvalidParameter", async () => {
+    accessMock.mockResolvedValue(undefined);
+    spawnMock.mockImplementation(() => fakeProcess(0));
+    for (const [fps, arg] of [
+      [0, "0"],
+      [-5, "-5"],
+      [0.5, "0.5"],
+      [Number.POSITIVE_INFINITY, "inf"],
+      [Number.NaN, "NaN"],
+      [1e21, "1000000000000000000000"],
+      [1e-7, "0.0000001"],
+    ] as const) {
+      await encodeProres(frames, { fps, outputPath: "/tmp/out.mov" });
+      const [, args] = spawnMock.mock.lastCall as [string, string[]];
+      expect(args.slice(1, 3)).toEqual(["-r", arg]);
+    }
+    await expect(
+      encodeProres(frames, { fps: "8" as unknown as number, outputPath: "/tmp/x.mov" }),
+    ).rejects.toMatchObject({ code: "InvalidParameter" });
     await expect(encodeProres(frames, { outputPath: "" })).rejects.toMatchObject({
       code: "InvalidParameter",
     });

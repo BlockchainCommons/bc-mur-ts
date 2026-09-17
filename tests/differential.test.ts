@@ -41,6 +41,23 @@ const TOMBSTONES: {
     landed: true,
     matches: (r) => r.k === "domain",
   },
+  {
+    // GIF rows compare decoded frames: their pixels moved with the QR
+    // encoder (as T1), a non-positive `fps` gives the reference's saturated
+    // delay where the baseline's encoder wrapped the field, and frames of
+    // more than 256 colours are quantised as the reference quantises them.
+    id: "T3",
+    landed: true,
+    matches: (r) => r.k === "gif",
+  },
+  {
+    // PNG logos decode as the reference's `into_rgba8` (the baseline read a
+    // palette's indices as grey and rejected 16-bit samples) and only PNG and
+    // JPEG are accepted (the baseline decoded GIF and BMP).
+    id: "T4",
+    landed: true,
+    matches: (r) => r.k === "logo-bytes",
+  },
 ];
 
 const baseline = await baselineAdapter();

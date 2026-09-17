@@ -3,8 +3,7 @@
  */
 
 import * as jpeg from "jpeg-js";
-import { decode as decodePng } from "fast-png";
-import { GifReader } from "omggif";
+import { type DecodedPng, decode as decodePng } from "fast-png";
 import { MurError, messageOf } from "./error.js";
 import { expectBytes, expectNumber } from "./guards.js";
 import { type RgbaImage, expectImage } from "./image.js";
@@ -14,6 +13,22 @@ export type LogoClearShape = "square" | "circle";
 
 /** Every {@link LogoClearShape}. */
 export const LOGO_CLEAR_SHAPES: readonly LogoClearShape[] = Object.freeze(["square", "circle"]);
+
+/**
+ * The shape a name denotes, case-insensitively (the reference's `FromStr`).
+ * Anything else throws an `Error` carrying the reference's message, which
+ * is a bare string there rather than an error variant.
+ */
+export function parseClearShape(s: string): LogoClearShape {
+  switch (s.toLowerCase()) {
+    case "square":
+      return "square";
+    case "circle":
+      return "circle";
+    default:
+      throw new Error(`unknown clear shape: ${s} (expected square or circle)`);
+  }
+}
 
 /** How a logo sits on the QR code. */
 export interface LogoOptions {
@@ -68,45 +83,21 @@ export class Logo implements RgbaImage {
   }
 
   /**
-   * A logo decoded from PNG, JPEG, GIF (first frame) or BMP (24/32-bit
-   * uncompressed) bytes. The reference decodes PNG and JPEG only; GIF and
-   * BMP are extensions. WebP needs the `/webp` entry (`logoFromWebp`) and
-   * SVG the `/svg-logo` entry (`logoFromSvg`).
+   * A logo decoded from PNG or JPEG bytes, the formats the reference is
+   * built with, as its `into_rgba8` decodes them: every PNG colour type
+   * and bit depth (palettes and `tRNS` expanded, sub-byte grey scaled,
+   * 16-bit samples as `(c + 128) / 257`). Any other format, or bytes that
+   * do not decode, are `ImageEncode` (`failed to decode image: …` with
+   * the reference's wording: `The image format Gif is not supported`,
+   * `The image format could not be determined`). SVG needs the
+   * `/svg-logo` entry (`logoFromSvg`).
    */
   static fromImageBytes(data: Uint8Array, options: LogoOptions = {}): Logo {
     const { fraction, clearBorder, clearShape } = resolveLogoOptions(options);
     expectBytes("data", data);
     let image: RgbaImage;
     try {
-      if (isPng(data)) {
-        const decoded = decodePng(data);
-        image = {
-          width: decoded.width,
-          height: decoded.height,
-          pixels: ensureRgba8(
-            new Uint8Array(decoded.data.buffer, decoded.data.byteOffset, decoded.data.byteLength),
-            decoded.channels ?? 4,
-            decoded.depth ?? 8,
-          ),
-        };
-      } else if (isJpeg(data)) {
-        const decoded = jpeg.decode(data, { useTArray: true });
-        image = {
-          width: decoded.width,
-          height: decoded.height,
-          pixels: decoded.data instanceof Uint8Array ? decoded.data : new Uint8Array(decoded.data),
-        };
-      } else if (isGif(data)) {
-        image = decodeGif(data);
-      } else if (isBmp(data)) {
-        image = decodeBmp(data);
-      } else if (isWebp(data)) {
-        throw new Error(
-          "WebP decoding requires the async API — use `logoFromWebp` from the `/webp` entry instead",
-        );
-      } else {
-        throw new Error("unrecognized format (expected PNG, JPEG, GIF, or BMP)");
-      }
+      image = decodeImage(data);
     } catch (e) {
       throw MurError.imageEncode(`failed to decode image: ${messageOf(e)}`, e);
     }
@@ -127,9 +118,6 @@ export function resolveLogoOptions(options: LogoOptions): Required<LogoOptions> 
   return { fraction, clearBorder, clearShape };
 }
 
-/** @internal Whether the bytes start with the RIFF/WEBP signature. */
-export { isWebp };
-
 /** @internal */
 export function validateFraction(f: number): number {
   return expectNumber("logo fraction", f, 0.01, 0.99);
@@ -143,157 +131,194 @@ export function validateClearBorder(b: number): number {
   return b;
 }
 
-function isPng(data: Uint8Array): boolean {
-  return (
-    data.length >= 8 &&
-    data[0] === 0x89 &&
-    data[1] === 0x50 &&
-    data[2] === 0x4e &&
-    data[3] === 0x47 &&
-    data[4] === 0x0d &&
-    data[5] === 0x0a &&
-    data[6] === 0x1a &&
-    data[7] === 0x0a
+// Decoding ------------------------------------------------------------------
+
+/** The reference's format sniffing (`image::guess_format`): a signature, an optional mask, the format's name. */
+const MAGIC_BYTES: readonly [readonly number[], readonly number[], string][] = [
+  [[0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a], [], "Png"],
+  [[0xff, 0xd8, 0xff], [], "Jpeg"],
+  [[0x47, 0x49, 0x46, 0x38, 0x39, 0x61], [], "Gif"],
+  [[0x47, 0x49, 0x46, 0x38, 0x37, 0x61], [], "Gif"],
+  [
+    [0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50],
+    [0xff, 0xff, 0xff, 0xff, 0, 0, 0, 0],
+    "WebP",
+  ],
+  [[0x4d, 0x4d, 0x00, 0x2a], [], "Tiff"],
+  [[0x49, 0x49, 0x2a, 0x00], [], "Tiff"],
+  [[0x44, 0x44, 0x53, 0x20], [], "Dds"],
+  [[0x42, 0x4d], [], "Bmp"],
+  [[0, 0, 1, 0], [], "Ico"],
+  [[0x23, 0x3f, 0x52, 0x41, 0x44, 0x49, 0x41, 0x4e, 0x43, 0x45], [], "Hdr"],
+  [[0, 0, 0, 0, 0x66, 0x74, 0x79, 0x70, 0x61, 0x76, 0x69, 0x66], [0xff, 0xff, 0, 0], "Avif"],
+  [[0x76, 0x2f, 0x31, 0x01], [], "OpenExr"],
+  [[0x71, 0x6f, 0x69, 0x66], [], "Qoi"],
+  [[0x50, 0x31], [], "Pnm"],
+  [[0x50, 0x32], [], "Pnm"],
+  [[0x50, 0x33], [], "Pnm"],
+  [[0x50, 0x34], [], "Pnm"],
+  [[0x50, 0x35], [], "Pnm"],
+  [[0x50, 0x36], [], "Pnm"],
+  [[0x50, 0x37], [], "Pnm"],
+  [[0x66, 0x61, 0x72, 0x62, 0x66, 0x65, 0x6c, 0x64], [], "Farbfeld"],
+];
+
+/** The format the bytes' signature names, or `undefined`. */
+function guessFormat(data: Uint8Array): string | undefined {
+  for (const [signature, mask, format] of MAGIC_BYTES) {
+    if (data.length < signature.length) continue;
+    let matches = true;
+    for (let i = 0; i < signature.length; i++) {
+      if ((data[i] & (mask[i] ?? 0xff)) !== signature[i]) {
+        matches = false;
+        break;
+      }
+    }
+    if (matches) return format;
+  }
+  return undefined;
+}
+
+/** PNG or JPEG bytes as straight RGBA8, as `image::load_from_memory(..).into_rgba8()` decodes them. */
+function decodeImage(data: Uint8Array): RgbaImage {
+  const format = guessFormat(data);
+  if (format === "Png") return decodePngRgba8(data);
+  if (format === "Jpeg") {
+    const decoded = jpeg.decode(data, { useTArray: true });
+    const pixels = decoded.data instanceof Uint8Array ? decoded.data : new Uint8Array(decoded.data);
+    return { width: decoded.width, height: decoded.height, pixels };
+  }
+  throw new Error(
+    format === undefined
+      ? "The image format could not be determined"
+      : `The image format ${format} is not supported`,
   );
 }
 
-function isJpeg(data: Uint8Array): boolean {
-  return data.length >= 3 && data[0] === 0xff && data[1] === 0xd8 && data[2] === 0xff;
+function decodePngRgba8(data: Uint8Array): RgbaImage {
+  // The IHDR's interlace byte and bit depth: fast-png decodes an interlaced
+  // image with a bit depth below 8 wrongly, so it is refused rather than
+  // rendered from garbage.
+  if (data[28] === 1 && data[24] < 8) {
+    throw new Error("interlaced PNG with a bit depth below 8 is not supported");
+  }
+  const png = decodePng(data);
+  return { width: png.width, height: png.height, pixels: pngToRgba8(png) };
 }
 
-/** GIF87a / GIF89a magic bytes. */
-function isGif(data: Uint8Array): boolean {
-  return (
-    data.length >= 6 &&
-    data[0] === 0x47 &&
-    data[1] === 0x49 &&
-    data[2] === 0x46 &&
-    data[3] === 0x38 &&
-    (data[4] === 0x37 || data[4] === 0x39) &&
-    data[5] === 0x61
-  );
-}
-
-/** BMP magic bytes — `BM`. */
-function isBmp(data: Uint8Array): boolean {
-  return data.length >= 2 && data[0] === 0x42 && data[1] === 0x4d;
-}
-
-/** WebP magic bytes — `RIFF....WEBP`. */
-function isWebp(data: Uint8Array): boolean {
-  return (
-    data.length >= 12 &&
-    data[0] === 0x52 &&
-    data[1] === 0x49 &&
-    data[2] === 0x46 &&
-    data[3] === 0x46 &&
-    data[8] === 0x57 &&
-    data[9] === 0x45 &&
-    data[10] === 0x42 &&
-    data[11] === 0x50
-  );
-}
-
-/** Decodes a GIF to RGBA8 (the first frame of an animation). */
-function decodeGif(data: Uint8Array): RgbaImage {
-  const reader = new GifReader(data);
-  const width = reader.width;
-  const height = reader.height;
-  const pixels = new Uint8Array(width * height * 4);
-  reader.decodeAndBlitFrameRGBA(0, pixels);
-  return { width, height, pixels };
-}
+/** `(c + 128) / 257`, the reference's 16-bit to 8-bit sample conversion. */
+const sample8 = (c: number): number => Math.floor((c + 128) / 257);
 
 /**
- * Decodes an uncompressed 24-bit or 32-bit BMP (`BI_RGB`) to RGBA8. RLE,
- * 16-bit and paletted BMPs are a decode error.
+ * A decoded PNG as RGBA8, as the reference's `png` crate expands it and
+ * `image` converts it: palette entries (with `tRNS` alpha), sub-byte grey
+ * scaled by `255 / (2^depth - 1)`, a `tRNS` colour key as alpha 0, and
+ * 16-bit samples through `sample8`.
  */
-function decodeBmp(data: Uint8Array): RgbaImage {
-  if (data.length < 54) {
-    throw new Error("BMP too small (expected at least 54 header bytes)");
-  }
-  const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
-  const dataOffset = view.getUint32(10, true);
-  const dibSize = view.getUint32(14, true);
-  if (dibSize < 40) {
-    throw new Error(`unsupported BMP DIB header size: ${dibSize}`);
-  }
-  const width = view.getInt32(18, true);
-  const heightSigned = view.getInt32(22, true);
-  const height = Math.abs(heightSigned);
-  const topDown = heightSigned < 0;
-  const bpp = view.getUint16(28, true);
-  const compression = view.getUint32(30, true);
-  if (compression !== 0) {
-    throw new Error(`unsupported BMP compression: ${compression} (only BI_RGB is supported)`);
-  }
-  if (bpp !== 24 && bpp !== 32) {
-    throw new Error(`unsupported BMP bit depth: ${bpp} (expected 24 or 32)`);
-  }
-  const bytesPerPixel = bpp / 8;
-  // BMP rows are padded to 4-byte boundaries.
-  const rowStride = Math.ceil((width * bpp) / 32) * 4;
-  const pixels = new Uint8Array(width * height * 4);
-
-  for (let y = 0; y < height; y++) {
-    const srcRow = topDown ? y : height - 1 - y;
-    const srcOffset = dataOffset + srcRow * rowStride;
-    if (srcOffset + width * bytesPerPixel > data.length) {
-      throw new Error("BMP truncated row data");
+function pngToRgba8(png: DecodedPng): Uint8Array {
+  const { width, height, depth, channels, palette, transparency } = png;
+  const count = width * height;
+  const out = new Uint8Array(count * 4);
+  if (palette !== undefined) {
+    const indices = unpackRows(png.data as Uint8Array, width, height, depth);
+    for (let i = 0, j = 0; i < count; i++, j += 4) {
+      const entry = palette[indices[i]];
+      if (entry === undefined) throw new Error(`palette index ${indices[i]} out of range`);
+      out[j] = entry[0];
+      out[j + 1] = entry[1];
+      out[j + 2] = entry[2];
+      out[j + 3] = entry[3] ?? 255;
     }
-    for (let x = 0; x < width; x++) {
-      const px = srcOffset + x * bytesPerPixel;
-      const dst = (y * width + x) * 4;
-      // BMP stores pixels as B, G, R[, A].
-      pixels[dst] = data[px + 2]!;
-      pixels[dst + 1] = data[px + 1]!;
-      pixels[dst + 2] = data[px]!;
-      pixels[dst + 3] = bpp === 32 ? data[px + 3]! : 255;
+    return out;
+  }
+  if (depth === 16) {
+    const data = png.data as Uint16Array;
+    // The colour key's 16-bit samples; no sample matches −1.
+    const key: ArrayLike<number> = transparency ?? [-1, -1, -1];
+    for (let i = 0, j = 0, k = 0; i < count; i++, j += 4, k += channels) {
+      let alpha = 0xffff;
+      switch (channels) {
+        case 1:
+          out[j] = out[j + 1] = out[j + 2] = sample8(data[k]);
+          if (data[k] === key[0]) alpha = 0;
+          break;
+        case 2:
+          out[j] = out[j + 1] = out[j + 2] = sample8(data[k]);
+          alpha = data[k + 1];
+          break;
+        case 3:
+          out[j] = sample8(data[k]);
+          out[j + 1] = sample8(data[k + 1]);
+          out[j + 2] = sample8(data[k + 2]);
+          if (data[k] === key[0] && data[k + 1] === key[1] && data[k + 2] === key[2]) alpha = 0;
+          break;
+        default:
+          out[j] = sample8(data[k]);
+          out[j + 1] = sample8(data[k + 1]);
+          out[j + 2] = sample8(data[k + 2]);
+          alpha = data[k + 3];
+      }
+      out[j + 3] = sample8(alpha);
+    }
+    return out;
+  }
+  const data = png.data as Uint8Array;
+  if (depth < 8) {
+    // Grey only: the other colour types need 8 bits or more.
+    const scale = Math.floor(255 / ((1 << depth) - 1));
+    const values = unpackRows(data, width, height, depth);
+    const key = transparency === undefined ? -1 : transparency[0] & 0xff;
+    for (let i = 0, j = 0; i < count; i++, j += 4) {
+      const v = values[i];
+      out[j] = out[j + 1] = out[j + 2] = v * scale;
+      out[j + 3] = v === key ? 0 : 255;
+    }
+    return out;
+  }
+  // The colour key's low bytes at 8 bits (the reference keeps those); no key matches −1.
+  const key = transparency === undefined ? [-1, -1, -1] : Array.from(transparency, (v) => v & 0xff);
+  for (let i = 0, j = 0, k = 0; i < count; i++, j += 4, k += channels) {
+    switch (channels) {
+      case 1: {
+        out[j] = out[j + 1] = out[j + 2] = data[k];
+        out[j + 3] = data[k] === key[0] ? 0 : 255;
+        break;
+      }
+      case 2:
+        out[j] = out[j + 1] = out[j + 2] = data[k];
+        out[j + 3] = data[k + 1];
+        break;
+      case 3: {
+        out[j] = data[k];
+        out[j + 1] = data[k + 1];
+        out[j + 2] = data[k + 2];
+        out[j + 3] =
+          data[k] === key[0] && data[k + 1] === key[1] && data[k + 2] === key[2] ? 0 : 255;
+        break;
+      }
+      default:
+        out[j] = data[k];
+        out[j + 1] = data[k + 1];
+        out[j + 2] = data[k + 2];
+        out[j + 3] = data[k + 3];
     }
   }
-  return { width, height, pixels };
+  return out;
 }
 
-function ensureRgba8(data: Uint8Array, channels: number, depth: number): Uint8Array {
-  if (depth !== 8) {
-    throw MurError.imageEncode(`unsupported PNG bit depth: ${depth} (expected 8)`);
-  }
-  if (channels === 4) {
-    return data;
-  }
-  if (channels === 3) {
-    const px = data.length / 3;
-    const out = new Uint8Array(px * 4);
-    for (let i = 0, j = 0; i < data.length; i += 3, j += 4) {
-      out[j] = data[i]!;
-      out[j + 1] = data[i + 1]!;
-      out[j + 2] = data[i + 2]!;
-      out[j + 3] = 255;
+/** Sub-byte samples unpacked one per byte, most significant first; rows are byte-aligned. 8-bit data is returned as is. */
+function unpackRows(packed: Uint8Array, width: number, height: number, depth: number): Uint8Array {
+  if (depth === 8) return packed;
+  const out = new Uint8Array(width * height);
+  const bytesPerRow = Math.ceil((width * depth) / 8);
+  const perByte = 8 / depth;
+  const mask = (1 << depth) - 1;
+  for (let y = 0; y < height; y++) {
+    const row = y * bytesPerRow;
+    for (let x = 0; x < width; x++) {
+      const byte = packed[row + Math.floor(x / perByte)];
+      out[y * width + x] = (byte >> (8 - depth * ((x % perByte) + 1))) & mask;
     }
-    return out;
   }
-  if (channels === 2) {
-    const px = data.length / 2;
-    const out = new Uint8Array(px * 4);
-    for (let i = 0, j = 0; i < data.length; i += 2, j += 4) {
-      const v = data[i];
-      out[j] = v;
-      out[j + 1] = v;
-      out[j + 2] = v;
-      out[j + 3] = data[i + 1]!;
-    }
-    return out;
-  }
-  if (channels === 1) {
-    const out = new Uint8Array(data.length * 4);
-    for (let i = 0, j = 0; i < data.length; i++, j += 4) {
-      const v = data[i];
-      out[j] = v;
-      out[j + 1] = v;
-      out[j + 2] = v;
-      out[j + 3] = 255;
-    }
-    return out;
-  }
-  throw MurError.imageEncode(`unsupported PNG channel count: ${channels}`);
+  return out;
 }

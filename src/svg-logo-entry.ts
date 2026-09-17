@@ -7,4 +7,4 @@
  *
  * @packageDocumentation
  */
-export { initSvgRenderer, logoFromSvg, rasterizeSvg } from "./svg.js";
+export { initSvgRenderer, logoFromSvg } from "./svg.js";

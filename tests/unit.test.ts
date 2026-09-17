@@ -9,21 +9,25 @@ import { validateClearBorder, validateFraction } from "../src/logo.js";
 import { QrMatrix } from "../src/qr-matrix.js";
 import { LogoLayout } from "../src/render.js";
 import { demultiplyAlpha, rasterizeSvg } from "../src/svg.js";
+import { gifDelay } from "../src/gif.js";
+import { NeuQuant } from "../src/neuquant.js";
+import { createHash } from "node:crypto";
+import { numberArg } from "../src/cli/options.js";
 
 // color.rs
 describe("color", () => {
   it("parse_hex_6", () => {
-    const c = Color.from("#FF8000");
+    const c = Color.fromHex("#FF8000");
     expect(c).toEqual(new Color(255, 128, 0, 255));
   });
 
   it("parse_hex_8", () => {
-    const c = Color.from("#FF800080");
+    const c = Color.fromHex("#FF800080");
     expect(c).toEqual(new Color(255, 128, 0, 128));
   });
 
   it("parse_hex_3", () => {
-    const c = Color.from("#F80");
+    const c = Color.fromHex("#F80");
     expect(c).toEqual(new Color(0xff, 0x88, 0x00, 255));
   });
 
@@ -34,12 +38,21 @@ describe("color", () => {
   it("display_rgba", () => {
     expect(new Color(255, 128, 0, 128).toString()).toBe("#FF800080");
   });
-  it("from tuple, hex getter, bytes getter", () => {
-    expect(Color.from([255, 128, 0])).toEqual(new Color(255, 128, 0, 255));
-    expect(Color.from([255, 128, 0, 128]).hex).toBe("#FF800080");
-    expect(Array.from(Color.from("#F80").bytes)).toEqual([0xff, 0x88, 0x00, 255]);
-    expect(Color.from(Color.BLACK)).toBe(Color.BLACK);
+  it("fromHex takes a string only; equals compares every channel", () => {
+    expect(() => Color.fromHex([255, 128, 0] as unknown as string)).toThrow(
+      "Invalid color: expected a hex string, got an array",
+    );
+    expect(new Color(255, 128, 0).equals(Color.fromHex("F80"))).toBe(false);
+    expect(new Color(255, 136, 0).equals(Color.fromHex("F80"))).toBe(true);
   });
+  it("reports a non-ASCII digit by its first UTF-8 byte and measures the string in bytes, as the reference does", () => {
+    expect(() => Color.fromHex("#ÿÿÿ")).toThrow("Invalid color: invalid hex digit: 195");
+    expect(() => Color.fromHex("#zzÿ")).toThrow(
+      "Invalid color: expected #RGB, #RRGGBB, or #RRGGBBAA, got: #zzÿ",
+    );
+    expect(() => Color.fromHex("#ÿ")).toThrow("expected #RGB, #RRGGBB, or #RRGGBBAA, got: #ÿ");
+  });
+
   it("isTransparent", () => {
     expect(Color.TRANSPARENT.isTransparent).toBe(true);
     expect(new Color(0, 0, 0, 2).isTransparent).toBe(true);
@@ -153,6 +166,87 @@ describe("render", () => {
   it("render_ur_qr_uppercases", () => {
     const img = renderUrQr("ur:bytes/hdcxdwinvezm", { correction: "low", size: 256 });
     expect(img.width).toBe(256);
+  });
+});
+
+// animate.rs: `(100.0 / fps).round() as u16`
+describe("gif delay", () => {
+  it("saturates as the reference's float-to-u16 cast does", () => {
+    expect(gifDelay(8)).toBe(13);
+    expect(gifDelay(5)).toBe(20);
+    expect(gifDelay(0)).toBe(65535);
+    expect(gifDelay(-5)).toBe(0);
+    expect(gifDelay(Number.NaN)).toBe(0);
+    expect(gifDelay(1000)).toBe(0);
+    expect(gifDelay(0.001)).toBe(65535);
+  });
+});
+
+// color_quant 1.1.0: the palette and index map of the crate on the same buffers
+describe("NeuQuant", () => {
+  const sha = (u: Uint8Array): string => createHash("sha256").update(u).digest("hex");
+  const quantise = (pixels: Uint8Array): { palette: string; indices: string } => {
+    const nq = new NeuQuant(10, 256, pixels);
+    const palette = new Uint8Array(256 * 4);
+    for (let i = 0; i < 256; i++) palette.set(nq.lookup(i) ?? [0, 0, 0, 0], i * 4);
+    const indices = new Uint8Array(pixels.length / 4);
+    for (let i = 0, j = 0; i < pixels.length; i += 4, j++) {
+      indices[j] = nq.indexOf(pixels[i], pixels[i + 1], pixels[i + 2], pixels[i + 3]);
+    }
+    return { palette: sha(palette), indices: sha(indices) };
+  };
+
+  it("matches the crate on 257 random RGBA pixels", () => {
+    const pixels = Uint8Array.from(
+      Buffer.from(
+        "04768682261d046600319605758500257748eabbd0fb9ac11bb628c52a31da662634770f69adfe9f530895821692062d6fa38c92262dc1df0ffe77c5923f57f84da8ed24b205525f09315ec1703186f929923d089742e42d12e5d9a710018c5a237d8ac4943aaa785e29e81cf86867a063556e289e74fbe47c1002bbcd1420df9e7923a7558629e4033f527d57f678aa598cf7b27bbecd8559fd09d0b6400a3f5671b760e6afe9f36d9b0eeb954abf11b31e6a01a600ed53996e531002de1768590e859b80462c5183a2f8944a19b78899db94de2fb85db960d94831c95e1524ee367d2fce81003d3c9c91b9a8f6185f07fd40cb77714aa894ef89da569d967145052dd6ca8c71894cb1d03cf071c6c0fd2426a811f4b36c23dd5c0eb50fc340ccb9168c30b2645b44334c7d8931ae04b1e44f962281d9b6dcb3045beea39887afb8208d15d1cc5dc0980df1b3e34acd15db07c6301e8db0596f58a149ee420048520a302fcfe3be5da7ac80e5124d293d426858d4e94c096810c979a92b425627158848757ad35535f75e7ed978b646afef8ac0c8f50b97cf994b4eb32d8f156b8be26d263bb59cf2772de4f4d60d97be6ab245b6fe60e77ee694bf3b19a392e6ccaa87cbaacae2fd61e2bf91c6eb6189eb974a08f88b2852200b6f4805035f0182930a1b66f48057c72d67406cc3cc18862a6d1d4cbb24069ed4270a67a105ad569ee9566166628d3c2ed2ed561e9a8ff82a8f0deeac498eb3cc85ac0e667ecde53f62bd3bcf21d6c62c2f5e53f35ab6da03f45700ca332bf8f8253d1436ff176ef0a61f96a13d0a45785524356e63fc87c7b0a801de4196924f8935d36a9ca7b45227bf61ccdcce7ca91012509b9459d522f182717e81df2e20436c9b8025ed52fd6deab7aa24c580e1f6a31765e433dbbf0ad51f1c1ba0d1269c4fdf43ade223e147c0abf78787094b93491cf160fe931ecadff2446534e15a073d57880ae7cc5eb245721e661299456b065fecfbce84fbd9bf3c871ae65aa1d23d30610e52fcaaaa6013b5bec37a5e9b4385e4bef3a5b3538fa905e10964e705c8487186a492354e7bde0023608ce1e132eac111295f41be4ac6210d9d8d08a06f3269d0d43adcd3753e1ad0aad022417831ea854200c091f13b1caefe3b1279f22f137dea889c3d7b902dd87f60fec0cba7d6c4c94c062d1703813ca2f964a3f0a5b65ac61d22d7ec3e965833185b799b4ddcb467391734f893a8652bc299c8b5271d43512da4f76eea0f441a2be57e4b2abf77a90fb01f85403417813ed945243428aad80c9f4fd2f4c2b43bde3b5945a9937cdb87bffddf18af0f8399f1a637a9c09e290e3b08a0577e0bdf9861806528573a7974373bd1855c650c1337a8f26d1db98e233fd7467b90f1d6e1afb42c2380c06454b54c4e58f76da626a2a8fe77ac3004c1add1",
+        "hex",
+      ),
+    );
+    expect(quantise(pixels)).toEqual({
+      palette: "ec08e93995509a76e5e9239e2100e20a4d32ab7b387a5b7e4e924ac2b0306230",
+      indices: "37d1647a9bce4365320d44e8a96818713a0c51c548a58dacca78cbf845a36a25",
+    });
+  });
+
+  it("matches the crate on a 1 000-pixel buffer of few colours", () => {
+    const pixels = new Uint8Array(1000 * 4);
+    for (let i = 0; i < 1000; i++) {
+      pixels[i * 4] = i % 3 === 0 ? 255 : 0;
+      pixels[i * 4 + 1] = i % 5 === 0 ? 255 : 0;
+      pixels[i * 4 + 2] = 40;
+      pixels[i * 4 + 3] = 255;
+    }
+    expect(quantise(pixels)).toEqual({
+      palette: "5c73984a81d22539a4531f2ff3bba0d64a2f99dfddfe32b374a71dabe10b8d2e",
+      indices: "bac9fa0cd5a9ddaa853cef6294f90b230a5a063a42272bc104d81fd65dbcee16",
+    });
+  });
+
+  it("matches the crate on seven random pixels", () => {
+    const pixels = Uint8Array.from(
+      Buffer.from("1c49ea8ee174a69a6b41c77a7e7eaedf9d7329b476653da6db74cefd", "hex"),
+    );
+    expect(quantise(pixels)).toEqual({
+      palette: "717787ff9cb9d76931dadafef0605ad5f985a958626007ce53e050603a6c4f24",
+      indices: "9821231aedf54ae884951b4e43c8742a7336b31663ba8737d6772b3b9574af6a",
+    });
+  });
+});
+
+// clap's `f64` argument parser
+describe("--fps spellings", () => {
+  it("accepts what Rust's f64 parser accepts and nothing else", () => {
+    const parse = numberArg();
+    expect(parse("8")).toBe(8);
+    expect(parse("+.5")).toBe(0.5);
+    expect(parse("1e3")).toBe(1000);
+    expect(parse("inf")).toBe(Number.POSITIVE_INFINITY);
+    expect(parse("-Infinity")).toBe(Number.NEGATIVE_INFINITY);
+    expect(parse("NaN")).toBeNaN();
+    for (const bad of ["", " 5", "0x10", "abc", "1_000", "5e"]) {
+      expect(() => parse(bad)).toThrow("expected a number");
+    }
   });
 });
 

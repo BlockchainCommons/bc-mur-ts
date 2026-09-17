@@ -79,13 +79,22 @@ const cases: Case[] = [
   { name: "single size 1.5", args: ["single", SHORT, "--size", "1.5", "-o", join(out, "x.png")] },
   { name: "single fg zzz", args: ["single", SHORT, "--fg", "zzz", "-o", join(out, "x.png")] },
   {
+    name: "single fg non-ascii",
+    args: ["single", SHORT, "--fg", "#ÿÿÿ", "-o", join(out, "x.png")],
+  },
+  {
     name: "single quiet zone -1",
     args: ["single", SHORT, "--quiet-zone=-1", "-o", join(out, "x.png")],
   },
   {
     name: "single jpeg q0",
     args: ["single", SHORT, "--format", "jpeg", "--jpeg-quality", "0", "-o", join(out, "x.jpg")],
-    known: "quality 0 is rejected in the port; the reference clamps it to 1",
+    known: "JPEG byte count (encoders differ)",
+  },
+  {
+    name: "single jpeg q255",
+    args: ["single", SHORT, "--format", "jpeg", "--jpeg-quality", "255", "-o", join(out, "x.jpg")],
+    known: "JPEG byte count (encoders differ)",
   },
   {
     name: "single jpeg q300",
@@ -122,12 +131,22 @@ const cases: Case[] = [
     args: ["animate", LONG, "-o", join(out, "x.gif"), "--format", "bmp"],
   },
   { name: "animate without output", args: ["animate", LONG] },
+  {
+    name: "animate max-fragment-len 0",
+    args: ["animate", LONG, "-o", join(out, "x.gif"), "--max-fragment-len", "0", "--size", "32"],
+  },
   { name: "animate bad ur", args: ["animate", "ur:bytes/zzzz", "-o", join(out, "x.gif")] },
   {
     name: "animate fps 0",
     args: ["animate", LONG, "-o", join(out, "x.gif"), "--fps", "0", "--size", "32"],
-    known: "fps 0 is rejected in the port; the reference saturates the GIF delay",
+    known: "GIF byte count (encoders differ, decoded frames equal)",
   },
+  {
+    name: "animate fps inf",
+    args: ["animate", LONG, "-o", join(out, "x.gif"), "--fps", "Inf", "--size", "32"],
+    known: "GIF byte count (encoders differ, decoded frames equal)",
+  },
+  { name: "animate fps abc", args: ["animate", LONG, "-o", join(out, "x.gif"), "--fps", "abc"] },
   {
     name: "animate cycles 0",
     args: ["animate", LONG, "-o", join(out, "x.gif"), "--cycles", "0", "--size", "32"],

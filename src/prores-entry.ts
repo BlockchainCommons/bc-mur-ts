@@ -6,4 +6,4 @@
  *
  * @packageDocumentation
  */
-export { type ProresOptions, encodeProres, findFfmpeg } from "./prores.js";
+export { type ProresOptions, encodeProres } from "./prores.js";
