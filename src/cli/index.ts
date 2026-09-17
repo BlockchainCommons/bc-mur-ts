@@ -10,18 +10,17 @@ import { Command, CommanderError } from "commander";
 import packageJson from "../../package.json" with { type: "json" };
 import { type AnimateArgs, animate } from "./animate.js";
 import { type FramesArgs, frames } from "./frames.js";
-import { integerArg, numberArg, parseClearShape, parseCorrectionLevel } from "./options.js";
+import { parseCorrectionLevel } from "../correction.js";
+import { parseClearShape } from "../logo.js";
+import { integerArg, numberArg } from "./options.js";
 import { type SingleArgs, single } from "./single.js";
 import { getStyles } from "./styles.js";
 
 export { type AnimateArgs, animate } from "./animate.js";
 export { type FramesArgs, frames } from "./frames.js";
-export {
-  type DrawArgs,
-  type SequenceArgs,
-  parseClearShape,
-  parseCorrectionLevel,
-} from "./options.js";
+export { type DrawArgs, type SequenceArgs } from "./options.js";
+export { parseCorrectionLevel } from "../correction.js";
+export { parseClearShape } from "../logo.js";
 export { type SingleArgs, single } from "./single.js";
 
 /** The package version the `mur` binary reports. */
@@ -84,7 +83,7 @@ export function program(): Command {
       .option(
         "--max-fragment-len <n>",
         "Maximum fragment length for fountain coding.",
-        integerArg(1),
+        integerArg(0),
         100,
       )
       .option("--fps <n>", "Frames per second.", numberArg(), 8)

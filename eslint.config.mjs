@@ -278,7 +278,6 @@ export default [
     files: [
       "src/frames.ts",
       "src/gif.ts",
-      "src/webp.ts",
       "src/logo.ts",
       "src/qr-matrix.ts",
       "src/render.ts",

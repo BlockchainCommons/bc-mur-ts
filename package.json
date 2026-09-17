@@ -1,6 +1,6 @@
 {
   "name": "@blockchaincommons/multipart-ur",
-  "version": "1.0.0-beta.2",
+  "version": "1.0.0-beta.3",
   "type": "module",
   "sideEffects": false,
   "description": "Multipart UR QR code generator - single-frame and animated fountain-coded QR sequences with optional logo overlay.",
@@ -46,17 +46,6 @@
         "default": "./dist/gif-entry.cjs"
       },
       "default": "./dist/gif-entry.mjs"
-    },
-    "./webp": {
-      "import": {
-        "types": "./dist/webp-entry.d.mts",
-        "default": "./dist/webp-entry.mjs"
-      },
-      "require": {
-        "types": "./dist/webp-entry.d.cts",
-        "default": "./dist/webp-entry.cjs"
-      },
-      "default": "./dist/webp-entry.mjs"
     },
     "./svg-logo": {
       "import": {
@@ -113,7 +102,7 @@
     "api:check": "bun scripts/api-snapshot.ts --check && bun scripts/api-report.ts",
     "clean": "rm -rf dist",
     "docs": "typedoc",
-    "postinstall": "bun scripts/pin-lint-typescript.ts",
+    "prepare": "bun scripts/pin-lint-typescript.ts",
     "prepublishOnly": "npm run build",
     "lint:pkg": "publint && attw --pack . --profile node16",
     "check:deps": "bun scripts/check-deps.ts",
@@ -151,6 +140,7 @@
     "ajv": "^8.20.0",
     "eslint": "^10.10.0",
     "fast-check": "^4.10.1",
+    "omggif": "^1.0.10",
     "prettier": "3.9.7",
     "publint": "^0.3.24",
     "size-limit": "^14.0.0",
@@ -166,9 +156,7 @@
     "commander": "^15.0.0",
     "fast-png": "^8.0.0",
     "gifenc": "^1.0.3",
-    "jpeg-js": "^0.4.4",
-    "omggif": "^1.0.10",
-    "webp-wasm": "^1.0.6"
+    "jpeg-js": "^0.4.4"
   },
   "bin": {
     "mur": "./dist/bin/mur.cjs"

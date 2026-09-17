@@ -3,7 +3,6 @@
   "entryPoints": [
     "src/index.ts",
     "src/gif-entry.ts",
-    "src/webp-entry.ts",
     "src/svg-logo-entry.ts",
     "src/prores-entry.ts",
     "src/cli/index.ts"

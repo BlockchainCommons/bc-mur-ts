@@ -18,7 +18,7 @@ import { fileURLToPath } from "node:url";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const check = process.argv.includes("--check");
 
-const ENTRIES = ["index", "gif-entry", "webp-entry", "svg-logo-entry", "prores-entry", "cli/index"];
+const ENTRIES = ["index", "gif-entry", "svg-logo-entry", "prores-entry", "cli/index"];
 
 let failed = false;
 for (const entry of ENTRIES) {

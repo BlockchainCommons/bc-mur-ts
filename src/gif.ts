@@ -2,21 +2,30 @@
  * Copyright © 2026 Blockchain Commons, LLC
  */
 
-import { GIFEncoder, applyPalette, quantize } from "gifenc";
+import { GIFEncoder } from "gifenc";
 import { MurError, messageOf } from "./error.js";
 import type { QrFrame } from "./frames.js";
-import { expectPositive } from "./guards.js";
+import { expectNumeric } from "./guards.js";
 import { expectImage } from "./image.js";
+import { NeuQuant } from "./neuquant.js";
 
 /** Animated-GIF timing. */
 export interface GifOptions {
-  /** Frames per second, a positive number (default 8); written as whole centiseconds per frame. */
+  /**
+   * Frames per second (default 8). The frame delay is `round(100 / fps)`
+   * centiseconds saturated to the GIF's 16-bit field, as the reference's
+   * cast does: `0` gives 65 535 centiseconds, a negative or `NaN` value 0,
+   * anything above 200 also 0.
+   */
   fps?: number;
 }
 
 /**
  * Encodes the frames as a looping animated GIF. Frames of up to 256 colours
- * get their exact palette; frames with more (a logo) are quantised.
+ * get their exact palette in first-seen order; frames with more (a logo)
+ * are quantised with NeuQuant as the reference quantises them, so the
+ * decoded frames are the reference's. The container bytes differ from the
+ * reference's `gif` crate (palette placement, LZW encoder).
  */
 export function encodeAnimatedGif(
   frames: readonly QrFrame[],
@@ -25,7 +34,7 @@ export function encodeAnimatedGif(
   if (frames.length === 0) {
     throw MurError.invalidParameter("no frames to encode");
   }
-  const fps = expectPositive("fps", options.fps ?? 8);
+  const fps = expectNumeric("fps", options.fps ?? 8);
   const width = frames[0].image.width;
   const height = frames[0].image.height;
   for (const frame of frames) {
@@ -36,8 +45,7 @@ export function encodeAnimatedGif(
       );
     }
   }
-  // The per-frame delay in whole centiseconds, as the reference writes it.
-  const delayCs = Math.round(100 / fps);
+  const delayCs = gifDelay(fps);
 
   let gif;
   try {
@@ -67,6 +75,13 @@ export function encodeAnimatedGif(
     throw MurError.gifEncode(`GIF finalize: ${messageOf(e)}`, e);
   }
   return gif.bytes();
+}
+
+/** @internal The per-frame delay in centiseconds: `round(100 / fps)` saturated to `u16`, the reference's cast. */
+export function gifDelay(fps: number): number {
+  const delay = Math.round(100 / fps);
+  if (Number.isNaN(delay) || delay < 0) return 0;
+  return Math.min(delay, 0xffff);
 }
 
 /** A frame reduced to an indexed image over a palette of at most 256 colours. */
@@ -110,7 +125,17 @@ function quantizeFrame(rgba: Uint8Array): QuantizedFrame {
     return { palette, indexed };
   }
 
-  const palette = quantize(rgba, 256, { format: "rgb565" }) as [number, number, number][];
-  const indexed = applyPalette(rgba, palette, "rgb565");
+  // More than 256 colours: NeuQuant over the RGBA frame, the palette's 256
+  // entries in the network's order, every pixel mapped to its nearest entry.
+  const nq = new NeuQuant(10, 256, rgba);
+  const palette: [number, number, number][] = [];
+  for (let i = 0; i < 256; i++) {
+    const c = nq.lookup(i);
+    palette.push(c === undefined ? [0, 0, 0] : [c[0], c[1], c[2]]);
+  }
+  const indexed = new Uint8Array(rgba.length / 4);
+  for (let i = 0, j = 0; i < rgba.length; i += 4, j++) {
+    indexed[j] = nq.indexOf(rgba[i], rgba[i + 1], rgba[i + 2], rgba[i + 3]);
+  }
   return { palette, indexed };
 }

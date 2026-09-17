@@ -1,5 +1,5 @@
-import { a as RenderOptions, c as renderUrQr, d as Color, f as ColorInput, i as writeFramePngs, l as CORRECTION_LEVELS, n as QrFrame, o as RenderedImage, r as generateFrames, s as renderQr, t as FrameOptions, u as CorrectionLevel } from "./frames-BVsJzpXh.mjs";
-import { a as RgbaImage, i as LogoOptions, n as Logo, r as LogoClearShape, t as LOGO_CLEAR_SHAPES } from "./logo-BfjBhkoX.mjs";
+import { a as RenderOptions, c as renderUrQr, d as CORRECTION_LEVELS, f as CorrectionLevel, i as writeFramePngs, l as Color, n as QrFrame, o as RenderedImage, p as parseCorrectionLevel, r as generateFrames, s as renderQr, t as FrameOptions, u as ColorInput } from "./frames-BzJmbtpz.mjs";
+import { a as parseClearShape, i as LogoOptions, n as Logo, o as RgbaImage, r as LogoClearShape, t as LOGO_CLEAR_SHAPES } from "./logo-Cu2tmFob.mjs";
 //#region src/qr-matrix.d.ts
 /**
  * Default maximum QR module count for reliable phone scanning.
@@ -147,5 +147,5 @@ export declare class MurError extends Error {
   static ur(message: string, cause?: unknown): MurErrorTyped<"Ur">;
 }
 //#endregion
-export { CORRECTION_LEVELS, Color, type ColorInput, type CorrectionLevel, type FrameOptions, LOGO_CLEAR_SHAPES, Logo, type LogoClearShape, type LogoOptions, type MurErrorCode, type MurErrorDetails, type MurErrorDetailsByCode, type MurErrorTyped, type QrFrame, type RenderOptions, RenderedImage, type RgbaImage, generateFrames, renderQr, renderUrQr, writeFramePngs };
+export { CORRECTION_LEVELS, Color, type ColorInput, type CorrectionLevel, type FrameOptions, LOGO_CLEAR_SHAPES, Logo, type LogoClearShape, type LogoOptions, type MurErrorCode, type MurErrorDetails, type MurErrorDetailsByCode, type MurErrorTyped, type QrFrame, type RenderOptions, RenderedImage, type RgbaImage, generateFrames, parseClearShape, parseCorrectionLevel, renderQr, renderUrQr, writeFramePngs };
 //# sourceMappingURL=index.d.mts.map

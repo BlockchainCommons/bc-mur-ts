@@ -39,14 +39,7 @@ const entries = Object.entries(pkg.exports)
 describe.skipIf(!built)("dist packaging", () => {
   it("declares the root and every encoder subpath", () => {
     expect(entries).toEqual(
-      expect.arrayContaining([
-        "index",
-        "gif-entry",
-        "webp-entry",
-        "svg-logo-entry",
-        "prores-entry",
-        "cli/index",
-      ]),
+      expect.arrayContaining(["index", "gif-entry", "svg-logo-entry", "prores-entry", "cli/index"]),
     );
   });
 
@@ -55,7 +48,7 @@ describe.skipIf(!built)("dist packaging", () => {
     const imports = [...text.matchAll(/from\s*"([^"]+)"|import\s*\(\s*"([^"]+)"\s*\)/g)].map(
       (m) => m[1] ?? m[2],
     );
-    for (const heavy of ["@resvg/resvg-wasm", "webp-wasm", "gifenc", "commander"]) {
+    for (const heavy of ["@resvg/resvg-wasm", "gifenc", "commander"]) {
       expect(imports, `dist/index.mjs must not import ${heavy}`).not.toContain(heavy);
       expect(text).not.toContain(`"${heavy}"`);
     }

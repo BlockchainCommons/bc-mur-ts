@@ -15,6 +15,31 @@ export const CORRECTION_LEVELS: readonly CorrectionLevel[] = Object.freeze([
   "high",
 ]);
 
+/**
+ * The level a name or its first letter denotes, case-insensitively (the
+ * reference's `FromStr`: `low`/`l`, `medium`/`m`, `quartile`/`q`,
+ * `high`/`h`). Anything else throws an `Error` carrying the reference's
+ * message, which is a bare string there rather than an error variant.
+ */
+export function parseCorrectionLevel(s: string): CorrectionLevel {
+  switch (s.toLowerCase()) {
+    case "low":
+    case "l":
+      return "low";
+    case "medium":
+    case "m":
+      return "medium";
+    case "quartile":
+    case "q":
+      return "quartile";
+    case "high":
+    case "h":
+      return "high";
+    default:
+      throw new Error(`unknown correction level: ${s} (expected low, medium, quartile, or high)`);
+  }
+}
+
 /** @internal The level's letter; unknown levels are an `InvalidParameter`. */
 export function correctionLevelToLetter(level: CorrectionLevel): "L" | "M" | "Q" | "H" {
   switch (level) {

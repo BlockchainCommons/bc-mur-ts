@@ -6,8 +6,8 @@
 
 import { InvalidArgumentError } from "commander";
 import { Color } from "../color.js";
-import { CORRECTION_LEVELS, type CorrectionLevel } from "../correction.js";
-import { LOGO_CLEAR_SHAPES, type LogoClearShape, type Logo } from "../logo.js";
+import { type CorrectionLevel, parseCorrectionLevel } from "../correction.js";
+import { type Logo, parseClearShape } from "../logo.js";
 import { DEFAULT_MAX_MODULES } from "../qr-matrix.js";
 
 /** The drawing arguments every subcommand takes; every optional field has the reference CLI's default. */
@@ -122,28 +122,6 @@ export async function readInput(s: string): Promise<string> {
   });
 }
 
-/** `low`/`medium`/`quartile`/`high`, or the first letter, case-insensitively. */
-export function parseCorrectionLevel(s: string): CorrectionLevel {
-  const lower = s.toLowerCase();
-  const level = CORRECTION_LEVELS.find(
-    (l) => l === lower || (l.startsWith(lower) && lower.length === 1),
-  );
-  if (level === undefined) {
-    throw new Error(`unknown correction level: ${s} (expected low, medium, quartile, or high)`);
-  }
-  return level;
-}
-
-/** `square` or `circle`, case-insensitively. */
-export function parseClearShape(s: string): LogoClearShape {
-  const lower = s.toLowerCase();
-  const shape = LOGO_CLEAR_SHAPES.find((c) => c === lower);
-  if (shape === undefined) {
-    throw new Error(`unknown clear shape: ${s} (expected square or circle)`);
-  }
-  return shape;
-}
-
 /** @internal A commander parser for an integer in `min`–`max`. */
 export function integerArg(
   min: number,
@@ -162,21 +140,29 @@ export function integerArg(
   };
 }
 
-/** @internal A commander parser for a finite number (the library checks its range). */
+/** Rust's `f64::from_str` grammar: an optional sign, then `inf`, `infinity`, `nan` (any case) or a decimal with an optional exponent. */
+const FLOAT = /^[+-]?(?:inf|infinity|nan|(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?)$/i;
+
+/** @internal A commander parser for a number in the spellings clap's `f64` accepts (the library decides what to do with it). */
 export function numberArg(): (value: string) => number {
   return (value) => {
-    const n = value.trim() === "" ? Number.NaN : Number(value);
-    if (!Number.isFinite(n)) {
+    if (!FLOAT.test(value)) {
       throw new InvalidArgumentError("expected a number");
     }
-    return n;
+    const negative = value.startsWith("-");
+    const word = value.replace(/^[+-]/, "").toLowerCase();
+    if (word === "nan") return Number.NaN;
+    if (word === "inf" || word === "infinity") {
+      return negative ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY;
+    }
+    return Number(value);
   };
 }
 
 /** @internal The foreground and background, swapped in dark mode. */
 export function colorsOf(args: ResolvedDrawArgs): { foreground: Color; background: Color } {
-  const fg = Color.from(args.fg);
-  const bg = Color.from(args.bg);
+  const fg = Color.fromHex(args.fg);
+  const bg = Color.fromHex(args.bg);
   return args.dark ? { foreground: bg, background: fg } : { foreground: fg, background: bg };
 }
 

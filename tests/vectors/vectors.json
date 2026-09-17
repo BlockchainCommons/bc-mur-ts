@@ -1,5 +1,5 @@
 {
- "count": 171,
+ "count": 209,
  "vectors": [
   {
    "name": "render ur:bytes/hdcxdwinvezm low 256px qz1",
@@ -135,7 +135,7 @@
     "frames": 3,
     "fps": 5
    },
-   "expect": "frames=3 32x32"
+   "expect": "frames=3 32x32 delay=20 hashes=8f6b8cdbe088eb6c1cbda2a593d8096c46a21f75cf33538ccda4af8c6c73b98d,38686ab13008e277a057c2611e8dfe3dc1a4a2115fc6d2ffcbe7e233b13f24a4,de6f1528395ac575ce7c1ead8b0189f51997bbe251cd0e39a1415e27805c11e7"
   },
   {
    "name": "density 01203f5e7d9cbbdaf9183756 low max117",
@@ -1165,7 +1165,7 @@
     "frames": 4,
     "fps": 10
    },
-   "expect": "frames=4 32x32"
+   "expect": "frames=4 32x32 delay=10 hashes=e81aa3ff21ff46aac1e3d2a4a8c6cbacc5a8a5da228304b30851411f22fe442c,439996c19baff24544bced3492f59faff484ebaf25e1f8b2dd0d054611d3d897,ef82fde5dbb60a39b3f6a1c3ae074bd9584e17d24973327c0b7dded98720ba86,5cc400a1433a10987192e149d2bfd1e44243a115aded9eb4c722fa88fbe5d1ee"
   },
   {
    "name": "gif 300B frag100 1f 1fps",
@@ -1176,7 +1176,114 @@
     "frames": 1,
     "fps": 1
    },
-   "expect": "frames=1 32x32"
+   "expect": "frames=1 32x32 delay=100 hashes=e81aa3ff21ff46aac1e3d2a4a8c6cbacc5a8a5da228304b30851411f22fe442c"
+  },
+  {
+   "name": "gif 300B frag100 2f 0fps",
+   "recipe": {
+    "k": "gif",
+    "length": 300,
+    "maxFragmentLen": 100,
+    "frames": 2,
+    "fps": 0
+   },
+   "expect": "frames=2 32x32 delay=65535 hashes=e81aa3ff21ff46aac1e3d2a4a8c6cbacc5a8a5da228304b30851411f22fe442c,439996c19baff24544bced3492f59faff484ebaf25e1f8b2dd0d054611d3d897"
+  },
+  {
+   "name": "gif 300B frag100 2f -5fps",
+   "recipe": {
+    "k": "gif",
+    "length": 300,
+    "maxFragmentLen": 100,
+    "frames": 2,
+    "fps": -5
+   },
+   "expect": "frames=2 32x32 delay=0 hashes=e81aa3ff21ff46aac1e3d2a4a8c6cbacc5a8a5da228304b30851411f22fe442c,439996c19baff24544bced3492f59faff484ebaf25e1f8b2dd0d054611d3d897"
+  },
+  {
+   "name": "gif 300B frag100 2f 1000fps",
+   "recipe": {
+    "k": "gif",
+    "length": 300,
+    "maxFragmentLen": 100,
+    "frames": 2,
+    "fps": 1000
+   },
+   "expect": "frames=2 32x32 delay=0 hashes=e81aa3ff21ff46aac1e3d2a4a8c6cbacc5a8a5da228304b30851411f22fe442c,439996c19baff24544bced3492f59faff484ebaf25e1f8b2dd0d054611d3d897"
+  },
+  {
+   "name": "gif 300B frag100 2f 0.3fps",
+   "recipe": {
+    "k": "gif",
+    "length": 300,
+    "maxFragmentLen": 100,
+    "frames": 2,
+    "fps": 0.3
+   },
+   "expect": "frames=2 32x32 delay=333 hashes=e81aa3ff21ff46aac1e3d2a4a8c6cbacc5a8a5da228304b30851411f22fe442c,439996c19baff24544bced3492f59faff484ebaf25e1f8b2dd0d054611d3d897"
+  },
+  {
+   "name": "gif 300B frag100 2f 8fps 128px logo gradient 40x24",
+   "recipe": {
+    "k": "gif",
+    "length": 300,
+    "maxFragmentLen": 100,
+    "frames": 2,
+    "fps": 8,
+    "size": 128,
+    "logo": {
+     "width": 40,
+     "height": 24,
+     "fill": "gradient",
+     "color": "#FF0000",
+     "fraction": 0.25,
+     "clearBorder": 1,
+     "clearShape": "square"
+    }
+   },
+   "expect": "frames=2 128x128 delay=13 hashes=eee5f5259aeba5fbdf5fbdcd413f19b1d35b49f2b47fdd46ed50dae288c3fa9a,a3ece9aebcb52f88920bfa30eb2f2344da0c742a089baf14ae996b7e50e05f46"
+  },
+  {
+   "name": "gif 300B frag100 3f 8fps 200px logo gradient 7x13",
+   "recipe": {
+    "k": "gif",
+    "length": 300,
+    "maxFragmentLen": 100,
+    "frames": 3,
+    "fps": 8,
+    "size": 200,
+    "logo": {
+     "width": 7,
+     "height": 13,
+     "fill": "gradient",
+     "color": "#FF0000",
+     "fraction": 0.4,
+     "clearBorder": 1,
+     "clearShape": "circle"
+    }
+   },
+   "expect": "frames=3 200x200 delay=13 hashes=3461e46817020226bdea1cbdf90fad3642821d2eef7d46f2897700d89c6c74cb,667d8553c479f759c464d0c290cd280d2c2c4890c9d9121589b12d2668f6e357,8e93113917eb8d3fde263c8a880aa5d772810fd4cb6a012d8fc2ade456f13701"
+  },
+  {
+   "name": "gif 300B frag100 2f 8fps 128px logo solid 32x32",
+   "recipe": {
+    "k": "gif",
+    "length": 300,
+    "maxFragmentLen": 100,
+    "frames": 2,
+    "fps": 8,
+    "size": 128,
+    "logo": {
+     "width": 32,
+     "height": 32,
+     "fill": "solid",
+     "color": "#FF0000",
+     "fraction": 0.25,
+     "clearBorder": 1,
+     "clearShape": "square"
+    }
+   },
+   "expect": "frames=2 128x128 delay=13 hashes=d0ecbb91f648664037ce2eb6704c77263802e9b76471dd27b6ba12d2d19fd66e,0cd16fa8d6c3df1506daa37d536143793d9bcfc7a371f394e6af311e0d24f7f7"
   },
   {
    "name": "color #000000",
@@ -1247,6 +1354,30 @@
    "recipe": {
     "k": "color",
     "hex": "#12345"
+   },
+   "expect": "throw:InvalidColor"
+  },
+  {
+   "name": "color #ÿÿÿ",
+   "recipe": {
+    "k": "color",
+    "hex": "#ÿÿÿ"
+   },
+   "expect": "throw:InvalidColor"
+  },
+  {
+   "name": "color #zzÿ",
+   "recipe": {
+    "k": "color",
+    "hex": "#zzÿ"
+   },
+   "expect": "throw:InvalidColor"
+  },
+  {
+   "name": "color #ÿ",
+   "recipe": {
+    "k": "color",
+    "hex": "#ÿ"
    },
    "expect": "throw:InvalidColor"
   },
@@ -1481,6 +1612,294 @@
    "expect": "throw:SvgRender"
   },
   {
+   "name": "logo-bytes png-rgba8 89B",
+   "recipe": {
+    "k": "logo-bytes",
+    "name": "png-rgba8",
+    "hex": "89504e470d0a1a0a0000000d49484452000000030000000208060000009d74661a0000002049444154789c63f8cfc0f09fe13f43038862e01291d3389162f4ffffffff8c0076cb0a3cd2b881580000000049454e44ae426082"
+   },
+   "expect": "3x2 pixels=7dc031705061e23314eea970b3d5f79a5be3680d133d722b2d7a91404dee524a"
+  },
+  {
+   "name": "logo-bytes png-rgb8 81B",
+   "recipe": {
+    "k": "logo-bytes",
+    "name": "png-rgb8",
+    "hex": "89504e470d0a1a0a0000000d49484452000000030000000208020000001216f14d0000001849444154789c63f8cfc0c000c15c227227528cfeffff0f003c190795efc2c6d80000000049454e44ae426082"
+   },
+   "expect": "3x2 pixels=5af1fc6b9f4aa08ea11026dc435c953a720649e79790ff6dabdb7c1d215fb883"
+  },
+  {
+   "name": "logo-bytes png-rgb8-trns 101B",
+   "recipe": {
+    "k": "logo-bytes",
+    "name": "png-rgb8-trns",
+    "hex": "89504e470d0a1a0a0000000d49484452000000030000000208020000001216f14d0000000674524e53000a0014001ec53629ff0000001a49444154789c63f8cfc0c0f09f814b440e844fa418fdffff1f0033e006d2431406fe0000000049454e44ae426082"
+   },
+   "expect": "3x2 pixels=7c12f28d7674304821f7d807850ca882a604f48dc79c5e569221265f424d04de"
+  },
+  {
+   "name": "logo-bytes png-gray8 70B",
+   "recipe": {
+    "k": "logo-bytes",
+    "name": "png-gray8",
+    "hex": "89504e470d0a1a0a0000000d4948445200000004000000010800000000dc5750110000000d49444154789c63604839f11f0003c0022c9fb185620000000049454e44ae426082"
+   },
+   "expect": "4x1 pixels=2e83c46d9829fd4d5660c341f4789c155d7fc746b358bd828ad44c4e41789b45"
+  },
+  {
+   "name": "logo-bytes png-gray8-trns 84B",
+   "recipe": {
+    "k": "logo-bytes",
+    "name": "png-gray8-trns",
+    "hex": "89504e470d0a1a0a0000000d4948445200000004000000010800000000dc5750110000000274524e5300643c4c68790000000d49444154789c63604839f11f0003c0022c9fb185620000000049454e44ae426082"
+   },
+   "expect": "4x1 pixels=bf96db981dfab1e22c5e1ddc14848a09ec30005bf8a95b6dc3592b066123b8f6"
+  },
+  {
+   "name": "logo-bytes png-gray1 67B",
+   "recipe": {
+    "k": "logo-bytes",
+    "name": "png-gray1",
+    "hex": "89504e470d0a1a0a0000000d4948445200000008000000010100000000cb7bd2ee0000000a49444154789c63d8040000b400b32418b7a20000000049454e44ae426082"
+   },
+   "expect": "8x1 pixels=343b0906666bac9d53f7633984fa912d016ce5870f5035a10b4d22a1d5624a64"
+  },
+  {
+   "name": "logo-bytes png-gray2 67B",
+   "recipe": {
+    "k": "logo-bytes",
+    "name": "png-gray2",
+    "hex": "89504e470d0a1a0a0000000d494844520000000400000001020000000096e748b00000000a49444154789c63900600001d001c8ef4f5210000000049454e44ae426082"
+   },
+   "expect": "4x1 pixels=b3101a7bf84fa4b1d102bc46be6d57e3813675025560316c3923af4a1fbdb932"
+  },
+  {
+   "name": "logo-bytes png-gray4-trns 82B",
+   "recipe": {
+    "k": "logo-bytes",
+    "name": "png-gray4-trns",
+    "hex": "89504e470d0a1a0a0000000d494844520000000400000001040000000019a7bd100000000274524e53000506f939b70000000b49444154789c63605d0f0000bc00b58241829c0000000049454e44ae426082"
+   },
+   "expect": "4x1 pixels=fc52576410bfb7c2ce3d502994c648f433ba94a9cd949814d6674241e5d04985"
+  },
+  {
+   "name": "logo-bytes png-ga8 75B",
+   "recipe": {
+    "k": "logo-bytes",
+    "name": "png-ga8",
+    "hex": "89504e470d0a1a0a0000000d4948445200000002000000020804000000d8bfc5af0000001249444154789c6360f89fd2c07082e13f230012dd03aca41b98bb0000000049454e44ae426082"
+   },
+   "expect": "2x2 pixels=217076abb12e7cd80c732e09aa5afe280b917dcec87e133725609edc177683fa"
+  },
+  {
+   "name": "logo-bytes png-palette8 86B",
+   "recipe": {
+    "k": "logo-bytes",
+    "name": "png-palette8",
+    "hex": "89504e470d0a1a0a0000000d4948445200000002000000010803000000c3fc8fb800000006504c5445ff00000000ff6ca1fd8e0000000b49444154789c636060040000040002bf7a3f4a0000000049454e44ae426082"
+   },
+   "expect": "2x1 pixels=e0b8f3a91e53b2aee7be9493043f0d54efa0b1d7bfa018ea8f192295a7229836"
+  },
+  {
+   "name": "logo-bytes png-palette8-trns 108B",
+   "recipe": {
+    "k": "logo-bytes",
+    "name": "png-palette8-trns",
+    "hex": "89504e470d0a1a0a0000000d4948445200000004000000010803000000cee2ffff0000000c504c5445ff000000ff000000ffffff00d6028f7b0000000274524e5300809b2b4e180000000d49444154789c63606064620600000f0007848e996d0000000049454e44ae426082"
+   },
+   "expect": "4x1 pixels=63ba2ef388880d750494fe5188a311f5d5eadc74a94ed7310c5b092c6a8009a4"
+  },
+  {
+   "name": "logo-bytes png-palette2 91B",
+   "recipe": {
+    "k": "logo-bytes",
+    "name": "png-palette2",
+    "hex": "89504e470d0a1a0a0000000d49484452000000040000000102030000008452e75e0000000c504c5445ff000000ff000000ffffff00d6028f7b0000000a49444154789c63900600001d001c8ef4f5210000000049454e44ae426082"
+   },
+   "expect": "4x1 pixels=5b48123a1babb9efe5965cb75028f1dbd7083cfbc848cd2abb380cbc809f9d73"
+  },
+  {
+   "name": "logo-bytes png-palette1 85B",
+   "recipe": {
+    "k": "logo-bytes",
+    "name": "png-palette1",
+    "hex": "89504e470d0a1a0a0000000d4948445200000008000000010103000000d9ce7d0000000006504c5445000000ffffffa5d99fdd0000000a49444154789c63d8040000b400b32418b7a20000000049454e44ae426082"
+   },
+   "expect": "8x1 pixels=343b0906666bac9d53f7633984fa912d016ce5870f5035a10b4d22a1d5624a64"
+  },
+  {
+   "name": "logo-bytes png-palette4-trns 107B",
+   "recipe": {
+    "k": "logo-bytes",
+    "name": "png-palette4-trns",
+    "hex": "89504e470d0a1a0a0000000d49484452000000030000000204030000006f5a7b2900000009504c5445ff000000ff000000ff2d4acd8a0000000374524e53ff0007da8a65900000000e49444154789c636054601062000000af0034a84f99dd0000000049454e44ae426082"
+   },
+   "expect": "3x2 pixels=3aabf44bf4b01503c196e4ed7b343f4c3ae568feff252def760ae21cb64b24bc"
+  },
+  {
+   "name": "logo-bytes png-rgba16 96B",
+   "recipe": {
+    "k": "logo-bytes",
+    "name": "png-rgba16",
+    "hex": "89504e470d0a1a0a0000000d49484452000000020000000210060000002226d1670000002749444154789c636860f8ff9f81a18141c824ac62d61e08bb91e13f23c3fffaff0dfffe37340000e92a0f62b16b06e30000000049454e44ae426082"
+   },
+   "expect": "2x2 pixels=ac14446d18436bccc8077a30f64ce2bb3ed7bba5ed916a3956478647ca5769c7"
+  },
+  {
+   "name": "logo-bytes png-gray16 72B",
+   "recipe": {
+    "k": "logo-bytes",
+    "name": "png-gray16",
+    "hex": "89504e470d0a1a0a0000000d49484452000000030000000110000000006e1b972b0000000f49444154789c6360606860f8ff1f000504027fe3804be00000000049454e44ae426082"
+   },
+   "expect": "3x1 pixels=0654cbdc3755d5ec1706594b77dac6dd6554aca37ba15960d05c9296bc201275"
+  },
+  {
+   "name": "logo-bytes png-gray16-trns 86B",
+   "recipe": {
+    "k": "logo-bytes",
+    "name": "png-gray16-trns",
+    "hex": "89504e470d0a1a0a0000000d49484452000000030000000110000000006e1b972b0000000274524e5380004d1055730000000f49444154789c6360606860f8ff1f000504027fe3804be00000000049454e44ae426082"
+   },
+   "expect": "3x1 pixels=e6347f73808663c1566876e1b8db917d9297061f8fb7e406a9e498a584759ca1"
+  },
+  {
+   "name": "logo-bytes png-ga16 74B",
+   "recipe": {
+    "k": "logo-bytes",
+    "name": "png-ga16",
+    "hex": "89504e470d0a1a0a0000000d49484452000000020000000110040000000ebb6b420000001149444154789c6368607060f8ff9fa101000d02033f821333c20000000049454e44ae426082"
+   },
+   "expect": "2x1 pixels=2628816d663460903807ebff23789db34cbec12960993ad4500f6ab5dc75d516"
+  },
+  {
+   "name": "logo-bytes png-rgb16-trns 102B",
+   "recipe": {
+    "k": "logo-bytes",
+    "name": "png-rgb16-trns",
+    "hex": "89504e470d0a1a0a0000000d4948445200000003000000011002000000c4125fa00000000674524e53123456789abc89e44ee60000001b49444154789c63103209ab98b547505049c9d8f8ff7f0686060600362a05b53b5759340000000049454e44ae426082"
+   },
+   "expect": "3x1 pixels=9e92e6ba33878286bf0b6b561f993626f3a536426f21cd3e10e076d6b89e1517"
+  },
+  {
+   "name": "logo-bytes png-rgba8-adam7 180B",
+   "recipe": {
+    "k": "logo-bytes",
+    "name": "png-rgba8-adam7",
+    "hex": "89504e470d0a1a0a0000000d4948445200000005000000050806000001fa6816730000007b49444154785e630082ff0c53def85c667832a746b9a2e3c47706afb2652f19f4849478198afcec26ee39f2a49acdaa2b9541d53af84bfec69ff718a6774e6c7bf8dfbc8081f3fa798960df5226869deaf34fdc4bfab49779aeeb268d1b3396fb0abf9ec3a05d7a372a6083817fe9eb6697596ad72cf7276aea010059ae30c8c9f4e2110000000049454e44ae426082"
+   },
+   "expect": "5x5 pixels=4a2fdbeed2787b31f0643a82a757b76b02fe98caad6f6385abf1a262460f2122"
+  },
+  {
+   "name": "logo-bytes png-palette8-trns 108B on ur:bytes/hdcxdwi high 200px qz2",
+   "recipe": {
+    "k": "logo-bytes",
+    "name": "png-palette8-trns",
+    "hex": "89504e470d0a1a0a0000000d4948445200000004000000010803000000cee2ffff0000000c504c5445ff000000ff000000ffffff00d6028f7b0000000274524e5300809b2b4e180000000d49444154789c63606064620600000f0007848e996d0000000049454e44ae426082",
+    "render": {
+     "payload": "ur:bytes/hdcxdwinvezm",
+     "correction": "high",
+     "size": 200,
+     "quietZone": 2
+    }
+   },
+   "expect": "4x1 pixels=63ba2ef388880d750494fe5188a311f5d5eadc74a94ed7310c5b092c6a8009a4 render=3dc6c351cca93cf6d0ee95c2c0429d1ea12c1fb0f5fdeb1103d3414de50f957c"
+  },
+  {
+   "name": "logo-bytes png-rgba8-adam7 180B on 0524436281a0bfde high 256px qz1",
+   "recipe": {
+    "k": "logo-bytes",
+    "name": "png-rgba8-adam7",
+    "hex": "89504e470d0a1a0a0000000d4948445200000005000000050806000001fa6816730000007b49444154785e630082ff0c53def85c667832a746b9a2e3c47706afb2652f19f4849478198afcec26ee39f2a49acdaa2b9541d53af84bfec69ff718a6774e6c7bf8dfbc8081f3fa798960df5226869deaf34fdc4bfab49779aeeb268d1b3396fb0abf9ec3a05d7a372a6083817fe9eb6697596ad72cf7276aea010059ae30c8c9f4e2110000000049454e44ae426082",
+    "render": {
+     "payload": "0524436281a0bfdefd1c3b5a7998b7d6f51433527190afceed0c2b4a6988a7c6e504234261809fbeddfc1b3a597897b6d5f4133251708faecdec0b2a496887a6c5e4032241607f9ebddcfb1a39587796b5d4f31231506f8eadcceb0a29486786a5c4e30221405f7e9dbcdbfa1938577695b4d3f211304f6e8daccbea0928476685a4c3e201203f5e7d9cbbdaf91837567594b3d2f1102f4e6d8cabcae90827466584a3c2e1001f3e5d7c9bbad9f81736557493b2d1f00f2e4d6c8baac9e80726456483a2c1e0ff1e",
+     "correction": "high",
+     "size": 256,
+     "quietZone": 1
+    }
+   },
+   "expect": "5x5 pixels=4a2fdbeed2787b31f0643a82a757b76b02fe98caad6f6385abf1a262460f2122 render=b70addfea7cd5800e498ad0a9aab503ee82fc3fc7f1e6dcd9d17ad8ee12d468d"
+  },
+  {
+   "name": "logo-bytes jpeg-8x8 636B",
+   "recipe": {
+    "k": "logo-bytes",
+    "name": "jpeg-8x8",
+    "hex": "ffd8ffe000104a46494600010100000100010000ffdb0084000302020302020303030304030304050805050404050a070706080c0a0c0c0b0a0b0b0d0e12100d0e110e0b0b1016101113141515150c0f1718161418121415140103040405040509050509140d0b0d1414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414ffc00011080008000803011100021101031101ffc401a20000010501010101010100000000000000000102030405060708090a0b100002010303020403050504040000017d01020300041105122131410613516107227114328191a1082342b1c11552d1f02433627282090a161718191a25262728292a3435363738393a434445464748494a535455565758595a636465666768696a737475767778797a838485868788898a92939495969798999aa2a3a4a5a6a7a8a9aab2b3b4b5b6b7b8b9bac2c3c4c5c6c7c8c9cad2d3d4d5d6d7d8d9dae1e2e3e4e5e6e7e8e9eaf1f2f3f4f5f6f7f8f9fa0100030101010101010101010000000000000102030405060708090a0b1100020102040403040705040400010277000102031104052131061241510761711322328108144291a1b1c109233352f0156272d10a162434e125f11718191a262728292a35363738393a434445464748494a535455565758595a636465666768696a737475767778797a82838485868788898a92939495969798999aa2a3a4a5a6a7a8a9aab2b3b4b5b6b7b8b9bac2c3c4c5c6c7c8c9cad2d3d4d5d6d7d8d9dae2e3e4e5e6e7e8e9eaf2f3f4f5f6f7f8f9faffda000c03010002110311003f00e67e147eca9fea7fd0fd3f86bd5ce78c37f788f0db8f7e0f7cff00ffd9"
+   },
+   "expect": "8x8 pixels=a16cd9be55672836b006a37b71ef1b41b74a200b5c6aef1eb9434f8268d05592"
+  },
+  {
+   "name": "logo-bytes jpeg-8x8 636B on ur:bytes/hdcxdwi high 200px qz2",
+   "recipe": {
+    "k": "logo-bytes",
+    "name": "jpeg-8x8",
+    "hex": "ffd8ffe000104a46494600010100000100010000ffdb0084000302020302020303030304030304050805050404050a070706080c0a0c0c0b0a0b0b0d0e12100d0e110e0b0b1016101113141515150c0f1718161418121415140103040405040509050509140d0b0d1414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414ffc00011080008000803011100021101031101ffc401a20000010501010101010100000000000000000102030405060708090a0b100002010303020403050504040000017d01020300041105122131410613516107227114328191a1082342b1c11552d1f02433627282090a161718191a25262728292a3435363738393a434445464748494a535455565758595a636465666768696a737475767778797a838485868788898a92939495969798999aa2a3a4a5a6a7a8a9aab2b3b4b5b6b7b8b9bac2c3c4c5c6c7c8c9cad2d3d4d5d6d7d8d9dae1e2e3e4e5e6e7e8e9eaf1f2f3f4f5f6f7f8f9fa0100030101010101010101010000000000000102030405060708090a0b1100020102040403040705040400010277000102031104052131061241510761711322328108144291a1b1c109233352f0156272d10a162434e125f11718191a262728292a35363738393a434445464748494a535455565758595a636465666768696a737475767778797a82838485868788898a92939495969798999aa2a3a4a5a6a7a8a9aab2b3b4b5b6b7b8b9bac2c3c4c5c6c7c8c9cad2d3d4d5d6d7d8d9dae2e3e4e5e6e7e8e9eaf2f3f4f5f6f7f8f9faffda000c03010002110311003f00e67e147eca9fea7fd0fd3f86bd5ce78c37f788f0db8f7e0f7cff00ffd9",
+    "render": {
+     "payload": "ur:bytes/hdcxdwinvezm",
+     "correction": "high",
+     "size": 200,
+     "quietZone": 2
+    }
+   },
+   "expect": "8x8 pixels=a16cd9be55672836b006a37b71ef1b41b74a200b5c6aef1eb9434f8268d05592 render=e694d74587d24923555282da3916599c2a2e189aef2bd8d54713e6bb9b3d7717"
+  },
+  {
+   "name": "logo-bytes gif-1px 42B",
+   "recipe": {
+    "k": "logo-bytes",
+    "name": "gif-1px",
+    "hex": "474946383961010001008000000000ffffff21f90401000000002c00000000010001000002024401003b"
+   },
+   "expect": "throw:ImageEncode"
+  },
+  {
+   "name": "logo-bytes bmp-1px 58B",
+   "recipe": {
+    "k": "logo-bytes",
+    "name": "bmp-1px",
+    "hex": "424d0000000000000000360000002800000001000000010000000100180000000000000000000000000000000000000000000000000000000000"
+   },
+   "expect": "throw:ImageEncode"
+  },
+  {
+   "name": "logo-bytes webp-header 20B",
+   "recipe": {
+    "k": "logo-bytes",
+    "name": "webp-header",
+    "hex": "524946460c000000574542500000000000000000"
+   },
+   "expect": "throw:ImageEncode"
+  },
+  {
+   "name": "logo-bytes png-truncated 12B",
+   "recipe": {
+    "k": "logo-bytes",
+    "name": "png-truncated",
+    "hex": "89504e470d0a1a0a0000000d"
+   },
+   "expect": "throw:ImageEncode"
+  },
+  {
+   "name": "logo-bytes garbage 4B",
+   "recipe": {
+    "k": "logo-bytes",
+    "name": "garbage",
+    "hex": "00010203"
+   },
+   "expect": "throw:ImageEncode"
+  },
+  {
+   "name": "logo-bytes empty 0B",
+   "recipe": {
+    "k": "logo-bytes",
+    "name": "empty",
+    "hex": ""
+   },
+   "expect": "throw:ImageEncode"
+  },
+  {
    "name": "jpeg ur:bytes/hdcxdwinvezm low 256px q1",
    "recipe": {
     "k": "jpeg",
@@ -1525,6 +1944,39 @@
    "expect": "256x256 within 25"
   },
   {
+   "name": "jpeg ur:bytes/hdcxdwinvezm low 128px q0",
+   "recipe": {
+    "k": "jpeg",
+    "payload": "ur:bytes/hdcxdwinvezm",
+    "correction": "low",
+    "size": 128,
+    "quality": 0
+   },
+   "expect": "128x128 beyond 25"
+  },
+  {
+   "name": "jpeg ur:bytes/hdcxdwinvezm low 128px q101",
+   "recipe": {
+    "k": "jpeg",
+    "payload": "ur:bytes/hdcxdwinvezm",
+    "correction": "low",
+    "size": 128,
+    "quality": 101
+   },
+   "expect": "128x128 within 25"
+  },
+  {
+   "name": "jpeg ur:bytes/hdcxdwinvezm low 128px q255",
+   "recipe": {
+    "k": "jpeg",
+    "payload": "ur:bytes/hdcxdwinvezm",
+    "correction": "low",
+    "size": 128,
+    "quality": 255
+   },
+   "expect": "128x128 within 25"
+  },
+  {
    "name": "jpeg 0524436281a0bfdefd1c3b5a high 128px q90",
    "recipe": {
     "k": "jpeg",
@@ -1536,71 +1988,10 @@
    "expect": "128x128 within 25"
   },
   {
-   "name": "domain colorTuple [[256,0,0]]",
+   "name": "domain colorValue [[10,20,30]]",
    "recipe": {
     "k": "domain",
-    "op": "colorTuple",
-    "args": [
-     [
-      256,
-      0,
-      0
-     ]
-    ]
-   },
-   "expect": "throw:InvalidColor"
-  },
-  {
-   "name": "domain colorTuple [[-1,0,0]]",
-   "recipe": {
-    "k": "domain",
-    "op": "colorTuple",
-    "args": [
-     [
-      -1,
-      0,
-      0
-     ]
-    ]
-   },
-   "expect": "throw:InvalidColor"
-  },
-  {
-   "name": "domain colorTuple [[1.5,2,3]]",
-   "recipe": {
-    "k": "domain",
-    "op": "colorTuple",
-    "args": [
-     [
-      1.5,
-      2,
-      3
-     ]
-    ]
-   },
-   "expect": "throw:InvalidColor"
-  },
-  {
-   "name": "domain colorTuple [[0,0,0,300]]",
-   "recipe": {
-    "k": "domain",
-    "op": "colorTuple",
-    "args": [
-     [
-      0,
-      0,
-      0,
-      300
-     ]
-    ]
-   },
-   "expect": "throw:InvalidColor"
-  },
-  {
-   "name": "domain colorTuple [[10,20,30]]",
-   "recipe": {
-    "k": "domain",
-    "op": "colorTuple",
+    "op": "colorValue",
     "args": [
      [
       10,
@@ -1609,7 +2000,18 @@
      ]
     ]
    },
-   "expect": "#0A141E"
+   "expect": "throw:InvalidColor"
+  },
+  {
+   "name": "domain colorValue [42]",
+   "recipe": {
+    "k": "domain",
+    "op": "colorValue",
+    "args": [
+     42
+    ]
+   },
+   "expect": "throw:InvalidColor"
   },
   {
    "name": "domain colorNew [300,0,0]",
@@ -1620,6 +2022,46 @@
      300,
      0,
      0
+    ]
+   },
+   "expect": "throw:InvalidColor"
+  },
+  {
+   "name": "domain colorNew [-1,0,0]",
+   "recipe": {
+    "k": "domain",
+    "op": "colorNew",
+    "args": [
+     -1,
+     0,
+     0
+    ]
+   },
+   "expect": "throw:InvalidColor"
+  },
+  {
+   "name": "domain colorNew [1.5,2,3]",
+   "recipe": {
+    "k": "domain",
+    "op": "colorNew",
+    "args": [
+     1.5,
+     2,
+     3
+    ]
+   },
+   "expect": "throw:InvalidColor"
+  },
+  {
+   "name": "domain colorNew [0,0,0,300]",
+   "recipe": {
+    "k": "domain",
+    "op": "colorNew",
+    "args": [
+     0,
+     0,
+     0,
+     300
     ]
    },
    "expect": "throw:InvalidColor"
@@ -1760,17 +2202,6 @@
    "expect": "throw:InvalidParameter"
   },
   {
-   "name": "domain jpegQuality [0]",
-   "recipe": {
-    "k": "domain",
-    "op": "jpegQuality",
-    "args": [
-     0
-    ]
-   },
-   "expect": "throw:InvalidParameter"
-  },
-  {
    "name": "domain jpegQuality [1.5]",
    "recipe": {
     "k": "domain",
@@ -1782,12 +2213,23 @@
    "expect": "throw:InvalidParameter"
   },
   {
-   "name": "domain jpegQuality [101]",
+   "name": "domain jpegQuality [256]",
    "recipe": {
     "k": "domain",
     "op": "jpegQuality",
     "args": [
-     101
+     256
+    ]
+   },
+   "expect": "throw:InvalidParameter"
+  },
+  {
+   "name": "domain jpegQuality [-1]",
+   "recipe": {
+    "k": "domain",
+    "op": "jpegQuality",
+    "args": [
+     -1
     ]
    },
    "expect": "throw:InvalidParameter"
@@ -2020,70 +2462,15 @@
    "expect": "ok"
   },
   {
-   "name": "domain gifFps [0]",
+   "name": "domain gifFps [\"8\"]",
    "recipe": {
     "k": "domain",
     "op": "gifFps",
     "args": [
-     0
+     "8"
     ]
    },
    "expect": "throw:InvalidParameter"
-  },
-  {
-   "name": "domain gifFps [-5]",
-   "recipe": {
-    "k": "domain",
-    "op": "gifFps",
-    "args": [
-     -5
-    ]
-   },
-   "expect": "throw:InvalidParameter"
-  },
-  {
-   "name": "domain gifFps [8]",
-   "recipe": {
-    "k": "domain",
-    "op": "gifFps",
-    "args": [
-     8
-    ]
-   },
-   "expect": "ok"
-  },
-  {
-   "name": "domain logoFormat [\"gif\"]",
-   "recipe": {
-    "k": "domain",
-    "op": "logoFormat",
-    "args": [
-     "gif"
-    ]
-   },
-   "expect": "1x1"
-  },
-  {
-   "name": "domain logoFormat [\"bmp\"]",
-   "recipe": {
-    "k": "domain",
-    "op": "logoFormat",
-    "args": [
-     "bmp"
-    ]
-   },
-   "expect": "1x1"
-  },
-  {
-   "name": "domain logoFormat [\"garbage\"]",
-   "recipe": {
-    "k": "domain",
-    "op": "logoFormat",
-    "args": [
-     "garbage"
-    ]
-   },
-   "expect": "throw:ImageEncode"
   }
  ]
 }

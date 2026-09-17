@@ -56,6 +56,7 @@ async function loadWasmFromNode(): Promise<Uint8Array> {
 const RENDER_SIZE = 512;
 
 /**
+ * @internal
  * Rasterises an SVG document into a 512×512 straight-alpha RGBA image,
  * scaled to fit and centred. The document is placed through an `<image>`
  * element inside a 512×512 root, so the rasteriser applies the scale and

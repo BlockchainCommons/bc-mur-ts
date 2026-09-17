@@ -154,29 +154,22 @@ fn frame_params(v: &Value) -> AnimateParams {
     p
 }
 
-/// Counts the image descriptors in a GIF byte stream (the TS `countGifFrames`).
-fn count_gif_frames(b: &[u8]) -> usize {
-    let mut count = 0;
-    let mut i = 13 + if b[10] & 0x80 != 0 { 3 << ((b[10] & 7) + 1) } else { 0 };
-    while i < b.len() {
-        match b[i] {
-            0x3b => break,
-            0x21 => {
-                i += 2;
-                while i < b.len() && b[i] != 0 { i += b[i] as usize + 1 }
-                i += 1;
-            }
-            0x2c => {
-                count += 1;
-                let flags = b[i + 9];
-                i += 10 + if flags & 0x80 != 0 { 3 << ((flags & 7) + 1) } else { 0 } + 1;
-                while i < b.len() && b[i] != 0 { i += b[i] as usize + 1 }
-                i += 1;
-            }
-            _ => break,
-        }
+/// A logo's dimensions and pixel hash, plus the pixel hash of the recipe's `render` with the logo composited.
+fn logo_outcome(r: &Value, logo: &Logo) -> Result<String, Error> {
+    let mut out = format!("{}x{} pixels={}", logo.width, logo.height, sha(&logo.pixels));
+    if let Some(rv) = r.get("render") {
+        let payload = s(rv, "payload").unwrap();
+        let c = correction(&s(rv, "correction").unwrap());
+        let size = u(rv, "size").unwrap() as u32;
+        let qz = u(rv, "quietZone").unwrap() as u32;
+        let img = if payload.starts_with("ur:") {
+            render_ur_qr(&payload, c, size, Color::BLACK, Color::WHITE, qz, Some(logo))?
+        } else {
+            render_qr(&hex::decode(&payload).unwrap(), c, size, Color::BLACK, Color::WHITE, qz, Some(logo))?
+        };
+        out.push_str(&format!(" render={}", sha(&img.pixels)));
     }
-    count
+    Ok(out)
 }
 
 fn run(r: &Value) -> Result<String, Error> {
@@ -216,11 +209,29 @@ fn run(r: &Value) -> Result<String, Error> {
             ))
         }
         "gif" => {
-            let params = AnimateParams { max_fragment_len: u(r, "maxFragmentLen").unwrap() as usize, size: 32, ..Default::default() };
+            let params = AnimateParams {
+                max_fragment_len: u(r, "maxFragmentLen").unwrap() as usize,
+                size: u(r, "size").map(|x| x as u32).unwrap_or(32),
+                logo: logo_of(r)?,
+                ..Default::default()
+            };
             let frames = generate_frames(&ur_of(u(r, "length").unwrap() as usize), &params)?;
             let n = (u(r, "frames").unwrap() as usize).min(frames.len());
             let bytes = encode_animated_gif(&frames[..n], f(r, "fps").unwrap())?;
-            Ok(format!("frames={} {}x{}", count_gif_frames(&bytes), frames[0].image.width, frames[0].image.height))
+            // Decoded as the `gif` crate reads it back: each frame as RGBA, and the first frame's delay.
+            let mut options = gif::DecodeOptions::new();
+            options.set_color_output(gif::ColorOutput::RGBA);
+            let mut decoder = options.read_info(std::io::Cursor::new(&bytes)).expect("decode the GIF");
+            let (width, height) = (decoder.width(), decoder.height());
+            let mut hashes = Vec::new();
+            let mut delay = 0;
+            while let Some(frame) = decoder.read_next_frame().expect("read a frame") {
+                if hashes.is_empty() {
+                    delay = frame.delay;
+                }
+                hashes.push(sha(&frame.buffer));
+            }
+            Ok(format!("frames={} {}x{} delay={} hashes={}", hashes.len(), width, height, delay, hashes.join(",")))
         }
         "color" => {
             let c = Color::from_hex(&s(r, "hex").unwrap())?;
@@ -233,20 +244,12 @@ fn run(r: &Value) -> Result<String, Error> {
                 u(r, "clearBorder").unwrap() as usize,
                 shape(&s(r, "clearShape").unwrap()),
             )?;
-            let mut out = format!("{}x{} pixels={}", logo.width, logo.height, sha(&logo.pixels));
-            if let Some(rv) = r.get("render") {
-                let payload = s(rv, "payload").unwrap();
-                let c = correction(&s(rv, "correction").unwrap());
-                let size = u(rv, "size").unwrap() as u32;
-                let qz = u(rv, "quietZone").unwrap() as u32;
-                let img = if payload.starts_with("ur:") {
-                    render_ur_qr(&payload, c, size, Color::BLACK, Color::WHITE, qz, Some(&logo))?
-                } else {
-                    render_qr(&hex::decode(&payload).unwrap(), c, size, Color::BLACK, Color::WHITE, qz, Some(&logo))?
-                };
-                out.push_str(&format!(" render={}", sha(&img.pixels)));
-            }
-            Ok(out)
+            logo_outcome(r, &logo)
+        }
+        "logo-bytes" => {
+            let bytes = hex::decode(s(r, "hex").unwrap()).unwrap();
+            let logo = Logo::from_image_bytes(&bytes, 0.25, 1, LogoClearShape::Square)?;
+            logo_outcome(r, &logo)
         }
         "jpeg" => {
             let payload = s(r, "payload").unwrap();
@@ -278,9 +281,14 @@ fn outcome(r: &Value) -> String {
     }
 }
 
-/// Classify an understood difference; None means MISMATCH. Every vector is
-/// compared exactly today: there is no recorded divergence class.
-fn classify(_recipe: &Value, _expect: &str, _got: &str) -> Option<(&'static str, String)> {
+/// Classify an understood difference; None means MISMATCH.
+fn classify(recipe: &Value, _expect: &str, _got: &str) -> Option<(&'static str, String)> {
+    let kind = s(recipe, "k").unwrap_or_default();
+    let name = s(recipe, "name").unwrap_or_default();
+    // A JPEG logo: the reference decodes with zune-jpeg, the port with jpeg-js; two baseline decoders differ by a few units.
+    if kind == "logo-bytes" && name.starts_with("jpeg") {
+        return Some(("jpeg-decoder", "JPEG logo decoded by zune-jpeg there and jpeg-js here".into()));
+    }
     None
 }
 

@@ -19,9 +19,9 @@ export interface RenderOptions {
   correction?: CorrectionLevel;
   /** Output width and height in pixels, a positive integer (default 512). */
   size?: number;
-  /** Module colour (default black). */
+  /** Module colour, a `Color` or a hex string (default black). */
   foreground?: ColorInput;
-  /** Background colour (default white). */
+  /** Background colour, a `Color` or a hex string (default white). */
   background?: ColorInput;
   /** Blank modules around the code, a non-negative integer (default 1). */
   quietZone?: number;
@@ -64,11 +64,18 @@ export function resolveRenderOptions(options: RenderOptions): ResolvedRenderOpti
   return {
     correction,
     size,
-    foreground: Color.from(options.foreground ?? Color.BLACK),
-    background: Color.from(options.background ?? Color.WHITE),
+    foreground: colorOf(options.foreground ?? Color.BLACK, "foreground"),
+    background: colorOf(options.background ?? Color.WHITE, "background"),
     quietZone,
     logo,
   };
+}
+
+/** A `Color`, or a hex string through `Color.fromHex`; anything else is `InvalidColor`. */
+function colorOf(input: ColorInput, name: string): Color {
+  if (input instanceof Color) return input;
+  if (typeof input === "string") return Color.fromHex(input);
+  throw MurError.invalidColor(`${name} must be a Color or a hex string, got ${describe(input)}`);
 }
 
 /** A rendered QR code: an RGBA raster with PNG and JPEG encoders. */
@@ -79,8 +86,6 @@ export class RenderedImage implements RgbaImage {
   readonly height: number;
   /** The RGBA pixels, row-major, `width * height * 4` bytes. */
   readonly pixels: Uint8Array;
-  /** Always 4 (RGBA). */
-  readonly channels = 4 as const;
 
   /** Wraps `image` (its buffer is used as is, not copied); `InvalidParameter` unless it is a well-formed `RgbaImage`. */
   constructor(image: RgbaImage) {
@@ -106,9 +111,15 @@ export class RenderedImage implements RgbaImage {
     }
   }
 
-  /** JPEG bytes at `quality`, an integer 1–100 (default 90). Alpha is dropped. */
+  /**
+   * JPEG bytes at `quality`, an integer 0–255 clamped to 1–100 as the
+   * reference's encoder clamps it (default 90). Alpha is dropped.
+   */
   toJpeg(options: { quality?: number } = {}): Uint8Array {
-    const quality = expectInteger("quality", options.quality ?? 90, 1, 100);
+    const quality = Math.min(
+      Math.max(expectInteger("quality", options.quality ?? 90, 0, 255), 1),
+      100,
+    );
     try {
       const result = jpeg.encode(
         { data: this.pixels, width: this.width, height: this.height },
@@ -134,9 +145,14 @@ export function renderUrQr(ur: UR | string, options: RenderOptions = {}): Render
   return renderQr(urBytes(ur), options);
 }
 
+/** @internal The reference's `to_ascii_uppercase`: ASCII letters upper-cased, everything else kept. */
+export function asciiUppercase(s: string): string {
+  return s.replace(/[a-z]+/g, (run) => run.toUpperCase());
+}
+
 /** @internal The bytes a UR encodes to: its string with ASCII letters upper-cased, as UTF-8. */
 export function urBytes(ur: UR | string): Uint8Array {
-  return new TextEncoder().encode(urString(ur).replace(/[a-z]+/g, (s) => s.toUpperCase()));
+  return new TextEncoder().encode(asciiUppercase(urString(ur)));
 }
 
 /** @internal `ur` as a string; `InvalidParameter` unless it is a `UR` or a string. */

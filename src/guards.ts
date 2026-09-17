@@ -2,8 +2,9 @@
  * Copyright © 2026 Blockchain Commons, LLC
  *
  * Argument-domain guards. Every public numeric or typed argument is checked
- * at the boundary and rejected as `InvalidParameter`; the library never
- * masks, clamps or rounds.
+ * at the boundary and rejected as `InvalidParameter`. Values the reference's
+ * types can express behave as the reference does, even where it clamps or
+ * saturates; values they cannot express are rejected.
  */
 
 import { MurError } from "./error.js";
@@ -37,10 +38,10 @@ export function expectNumber(name: string, value: unknown, min: number, max: num
   return value;
 }
 
-/** `value` as a finite number above zero, or `InvalidParameter`. */
-export function expectPositive(name: string, value: unknown): number {
-  if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
-    throw MurError.invalidParameter(`${name} must be a positive number, got ${String(value)}`);
+/** `value` as a number (any value, `NaN` and infinities included), or `InvalidParameter`. */
+export function expectNumeric(name: string, value: unknown): number {
+  if (typeof value !== "number") {
+    throw MurError.invalidParameter(`${name} must be a number, got ${describe(value)}`);
   }
   return value;
 }

@@ -15,11 +15,9 @@ export class Color {
     readonly a: number;
     readonly b: number;
     static readonly BLACK: Color;
-    get bytes(): Uint8Array;
     equals(other: Color): boolean;
-    static from(input: ColorInput): Color;
+    static fromHex(s: string): Color;
     readonly g: number;
-    get hex(): string;
     get isTransparent(): boolean;
     readonly r: number;
     toString(): string;
@@ -28,7 +26,7 @@ export class Color {
 }
 
 // @public
-export type ColorInput = string | Color | readonly [number, number, number] | readonly [number, number, number, number];
+export type ColorInput = Color | string;
 
 // @public
 export const CORRECTION_LEVELS: readonly CorrectionLevel[];
@@ -160,6 +158,12 @@ export type MurErrorTyped<C extends MurErrorCode = MurErrorCode> = C extends Mur
 } : never;
 
 // @public
+export function parseClearShape(s: string): LogoClearShape;
+
+// @public
+export function parseCorrectionLevel(s: string): CorrectionLevel;
+
+// @public
 export interface QrFrame {
     readonly image: RenderedImage;
     readonly index: number;
@@ -171,7 +175,6 @@ export function qrModuleCount(message: Uint8Array, correction: CorrectionLevel):
 // @public
 export class RenderedImage implements RgbaImage {
     constructor(image: RgbaImage);
-    readonly channels: 4;
     readonly height: number;
     readonly pixels: Uint8Array;
     toJpeg(options?: {

@@ -5,9 +5,12 @@
  * bare module matrix (one pixel a module, no quiet zone) as a bit string;
  * the animated frames of a UR at a fragment size → the part sequence, frame
  * count and the first frame's pixel hash; a GIF of a few frames → its
- * decoded frame count and size; an SVG logo → its rasterised pixels; a JPEG
- * → whether its decoded pixels stay within the epsilon; the density check;
- * colours; and `domain` rows that pin what the TypeScript boundary rejects.
+ * decoded frame count, size, delay and per-frame pixel hashes; an SVG logo
+ * → its rasterised pixels; a JPEG
+ * → whether its decoded pixels stay within the epsilon; image bytes given to
+ * the logo decoder → the decoded pixels or the rejection; the density
+ * check; colours; and `domain` rows that pin what the TypeScript boundary
+ * rejects.
  * `materialize` runs a recipe through a `VectorApi` and returns one outcome
  * string, so the same recipe drives the golden file, the differential and
  * the Rust harness.
@@ -50,7 +53,7 @@ export interface SvgSpec {
 
 /** The operations `domain` rows exercise; each pins a boundary check of the TypeScript API. */
 export type DomainOp =
-  | "colorTuple"
+  | "colorValue"
   | "colorNew"
   | "renderSize"
   | "renderQuietZone"
@@ -66,8 +69,7 @@ export type DomainOp =
   | "logoRgba"
   | "logoOptions"
   | "renderedImage"
-  | "gifFps"
-  | "logoFormat";
+  | "gifFps";
 
 export type Recipe =
   | ({ k: "render" } & RenderSpec)
@@ -84,10 +86,26 @@ export type Recipe =
       frameCount?: number;
       maxModules?: number;
     }
-  | { k: "gif"; length: number; maxFragmentLen: number; frames: number; fps: number }
+  | {
+      k: "gif";
+      length: number;
+      maxFragmentLen: number;
+      frames: number;
+      fps: number;
+      /** Frame size in pixels (default 32). */
+      size?: number;
+      logo?: LogoSpec;
+    }
   | { k: "color"; hex: string }
   | ({ k: "svg" } & SvgSpec)
   | { k: "jpeg"; payload: string; correction: Correction; size: number; quality: number }
+  /** Image bytes given to `Logo.fromImageBytes` (defaults), optionally composited on a render. */
+  | {
+      k: "logo-bytes";
+      name: string;
+      hex: string;
+      render?: { payload: string; correction: Correction; size: number; quietZone: number };
+    }
   | { k: "domain"; op: DomainOp; args: readonly unknown[] };
 export type Outcome = string;
 
@@ -101,10 +119,24 @@ export interface VectorApi {
     first: string;
     width: number;
   };
-  gif(r: Extract<Recipe, { k: "gif" }>): { frames: number; width: number; height: number };
+  gif(r: Extract<Recipe, { k: "gif" }>): {
+    frames: number;
+    width: number;
+    height: number;
+    /** The first frame's delay in centiseconds. */
+    delay: number;
+    /** The SHA-256 of each decoded frame's RGBA pixels. */
+    hashes: string[];
+  };
   color(hex: string): string;
   svg(spec: SvgSpec): Promise<{ width: number; height: number; pixels: string; render?: string }>;
   jpeg(r: Extract<Recipe, { k: "jpeg" }>): { width: number; height: number; within: boolean };
+  logoBytes(r: Extract<Recipe, { k: "logo-bytes" }>): {
+    width: number;
+    height: number;
+    pixels: string;
+    render?: string;
+  };
   domain(op: DomainOp, args: readonly unknown[]): string;
   errorCode(e: unknown): string | undefined;
 }
@@ -123,13 +155,15 @@ export function recipeName(r: Recipe): string {
     case "frames":
       return `frames ${r.length}B frag${r.maxFragmentLen}${r.size ? ` ${r.size}px` : ""}${r.correction ? ` ${r.correction}` : ""}${r.cycles ? ` ×${r.cycles}` : ""}${r.frameCount !== undefined ? ` n${r.frameCount}` : ""}${r.maxModules !== undefined ? ` max${r.maxModules}` : ""}`;
     case "gif":
-      return `gif ${r.length}B frag${r.maxFragmentLen} ${r.frames}f ${r.fps}fps`;
+      return `gif ${r.length}B frag${r.maxFragmentLen} ${r.frames}f ${r.fps}fps${r.size !== undefined ? ` ${r.size}px` : ""}${r.logo ? ` logo ${r.logo.fill} ${r.logo.width}x${r.logo.height}` : ""}`;
     case "color":
       return `color ${r.hex}`;
     case "svg":
       return `svg ${r.svg.length}B f${r.fraction} b${r.clearBorder} ${r.clearShape}${r.render ? ` on ${r.render.payload.slice(0, 16)} ${r.render.correction} ${r.render.size}px qz${r.render.quietZone}` : ""}`;
     case "jpeg":
       return `jpeg ${r.payload.slice(0, 24)} ${r.correction} ${r.size}px q${r.quality}`;
+    case "logo-bytes":
+      return `logo-bytes ${r.name} ${r.hex.length / 2}B${r.render ? ` on ${r.render.payload.slice(0, 16)} ${r.render.correction} ${r.render.size}px qz${r.render.quietZone}` : ""}`;
     case "domain":
       return `domain ${r.op} ${JSON.stringify(r.args)}`;
   }
@@ -154,7 +188,7 @@ export async function materialize(api: VectorApi, r: Recipe): Promise<Outcome> {
       }
       case "gif": {
         const o = api.gif(r);
-        return `frames=${o.frames} ${o.width}x${o.height}`;
+        return `frames=${o.frames} ${o.width}x${o.height} delay=${o.delay} hashes=${o.hashes.join(",")}`;
       }
       case "color":
         return api.color(r.hex);
@@ -165,6 +199,10 @@ export async function materialize(api: VectorApi, r: Recipe): Promise<Outcome> {
       case "jpeg": {
         const o = api.jpeg(r);
         return `${o.width}x${o.height} ${o.within ? `within ${JPEG_EPSILON}` : `beyond ${JPEG_EPSILON}`}`;
+      }
+      case "logo-bytes": {
+        const o = api.logoBytes(r);
+        return `${o.width}x${o.height} pixels=${o.pixels}${o.render !== undefined ? ` render=${o.render}` : ""}`;
       }
       case "domain":
         return api.domain(r.op, r.args);

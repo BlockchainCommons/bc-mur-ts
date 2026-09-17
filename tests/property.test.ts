@@ -13,13 +13,12 @@ import { LogoLayout, bilinearScale, nearestNeighborScale } from "../src/render.j
 const byte = fc.integer({ min: 0, max: 255 });
 
 describe("properties", () => {
-  it("Color.from(c.hex) equals c, and the hex is 7 or 9 characters", () => {
+  it("Color.fromHex(c.toString()) equals c, and the string is 7 or 9 characters", () => {
     fc.assert(
       fc.property(byte, byte, byte, byte, (r, g, b, a) => {
         const c = new Color(r, g, b, a);
-        expect(Color.from(c.hex).equals(c)).toBe(true);
-        expect(c.hex.length).toBe(a === 255 ? 7 : 9);
-        expect(Array.from(c.bytes)).toEqual([r, g, b, a]);
+        expect(Color.fromHex(c.toString()).equals(c)).toBe(true);
+        expect(c.toString().length).toBe(a === 255 ? 7 : 9);
       }),
     );
   });

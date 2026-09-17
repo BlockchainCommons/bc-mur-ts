@@ -43,7 +43,6 @@ describe("single frame", () => {
     const img = renderUrQr(SHORT_UR, { correction: "low", size: 512 });
     expect(img.width).toBe(512);
     expect(img.height).toBe(512);
-    expect(img.channels).toBe(4);
 
     const png = img.toPng();
     expect(png.length).toBeGreaterThan(100);
@@ -81,12 +80,23 @@ describe("single frame", () => {
     expect(Array.from(jpegBytes.slice(0, 3))).toEqual([0xff, 0xd8, 0xff]);
   });
 
+  it("jpeg quality is clamped to 1–100 as the reference's encoder clamps it", () => {
+    const img = renderUrQr(SHORT_UR, { correction: "medium", size: 64 });
+    expect(Array.from(img.toJpeg({ quality: 0 }))).toEqual(Array.from(img.toJpeg({ quality: 1 })));
+    expect(Array.from(img.toJpeg({ quality: 255 }))).toEqual(
+      Array.from(img.toJpeg({ quality: 100 })),
+    );
+    for (const bad of [-1, 256, 1.5, Number.NaN]) {
+      expect(() => img.toJpeg({ quality: bad })).toThrow(/quality must be an integer in 0–255/);
+    }
+  });
+
   it("custom colors", () => {
     const img = renderQr(new TextEncoder().encode("HELLO"), {
       correction: "high",
       size: 128,
       foreground: "#0000FF",
-      background: Color.from("#FFFF00"),
+      background: Color.fromHex("#FFFF00"),
     });
     expect(img.width).toBe(128);
     let hasBlue = false;
@@ -305,9 +315,9 @@ describe("animated", () => {
 
 describe("error cases", () => {
   it("invalid color hex", () => {
-    expect(() => Color.from("#ZZZZZZ")).toThrow();
+    expect(() => Color.fromHex("#ZZZZZZ")).toThrow();
     try {
-      Color.from("#ZZZZZZ");
+      Color.fromHex("#ZZZZZZ");
     } catch (e) {
       expect(MurError.isMurError(e)).toBe(true);
       expect((e as MurError).is("InvalidColor")).toBe(true);

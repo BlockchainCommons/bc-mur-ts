@@ -17,7 +17,7 @@ This package provides:
 - Density safety checks to prevent unreadable QR codes
 - CLI tool `mur` with `single`, `animate`, and `frames` subcommands
 
-The root entry is browser-compatible and loads no WASM. The encoders that need more are their own entries: `/gif`, `/webp`, `/svg-logo`, `/prores` (Node, with `ffmpeg` on `PATH`) and `/cli`.
+The root entry is browser-compatible and loads no WASM. The encoders that need more are their own entries: `/gif`, `/svg-logo`, `/prores` (Node, with `ffmpeg` on `PATH`) and `/cli`.
 
 ## Installation Instructions
 
@@ -70,11 +70,10 @@ try {
 
 | Entry | Exports | Loads | Runs in |
 |---|---|---|---|
-| `@blockchaincommons/multipart-ur` | `renderQr`, `renderUrQr`, `RenderedImage`, `generateFrames`, `writeFramePngs` (Node), `Logo` (RGBA, PNG, JPEG, GIF, BMP), `Color`, `qrModuleCount`, `checkQrDensity`, `DEFAULT_MAX_MODULES`, `MurError` | `uniform-resources`, `fast-png`, `jpeg-js`, `omggif` | browsers and Node |
+| `@blockchaincommons/multipart-ur` | `renderQr`, `renderUrQr`, `RenderedImage`, `generateFrames`, `writeFramePngs` (Node), `Logo` (RGBA, PNG, JPEG), `Color`, `qrModuleCount`, `checkQrDensity`, `DEFAULT_MAX_MODULES`, `MurError` | `uniform-resources`, `fast-png`, `jpeg-js` | browsers and Node |
 | `/gif` | `encodeAnimatedGif(frames, { fps })` | `gifenc` | browsers and Node |
-| `/webp` | `logoFromWebp`, `decodeWebp` | `webp-wasm` | Node |
-| `/svg-logo` | `logoFromSvg`, `rasterizeSvg`, `initSvgRenderer` | `@resvg/resvg-wasm` | Node (auto-loads the WASM), browsers after `initSvgRenderer(wasm)` |
-| `/prores` | `encodeProres(frames, { fps, outputPath })`, `findFfmpeg` | `ffmpeg` on `PATH` | Node |
+| `/svg-logo` | `logoFromSvg`, `initSvgRenderer` | `@resvg/resvg-wasm` | Node (auto-loads the WASM), browsers after `initSvgRenderer(wasm)` |
+| `/prores` | `encodeProres(frames, { fps, outputPath })` | `ffmpeg` on `PATH` | Node |
 | `/cli` | `program`, `runCli`, `single`, `animate`, `frames` | `commander` | Node |
 
 The QR symbols are the Rust reference's, module for module: the encoder is a port of the `qrcode` crate (mixed-mode segmentation, its mask selection), and the harness in `tests/rust-validation` proves it on every vector. Every numeric argument is validated: out-of-range, fractional or `NaN` values throw `InvalidParameter` (`InvalidColor` for colours) rather than being masked or clamped.
@@ -89,6 +88,7 @@ Runnable examples live in the [`examples/`](https://github.com/BlockchainCommons
 
 ### Version History
 
+- **1.0.0-beta.3 (September 16, 2026)** - PNG logos decode exactly as the reference does (palettes, `tRNS`, 16-bit); PNG and JPEG only; the reference's GIF delay saturation, JPEG quality clamp and messages; `Color.fromHex`; the enum parsers on the root entry.
 - **1.0.0-beta.2 (September 16, 2026)** - In-house QR encoder matching the Rust reference module for module; validated argument domains; typed error details; exact SVG placement; CLI exit statuses.
 - **1.0.0-beta.1 (September 9, 2026)** - Initial beta implementation.
 
@@ -99,7 +99,7 @@ Runnable examples live in the [`examples/`](https://github.com/BlockchainCommons
 
 ### Dependencies
 
-`@blockchaincommons/multipart-ur` depends on `@blockchaincommons/uniform-resources`, `@resvg/resvg-wasm`, `commander`, `fast-png`, `gifenc`, `jpeg-js`, `omggif`, `webp-wasm` at runtime; the root entry loads only `uniform-resources`, `fast-png`, `jpeg-js` and `omggif`. The QR encoder (`src/qr/`) is derived from the Rust [`qrcode`](https://crates.io/crates/qrcode) crate (MIT/Apache-2.0).
+`@blockchaincommons/multipart-ur` depends on `@blockchaincommons/uniform-resources`, `@resvg/resvg-wasm`, `commander`, `fast-png`, `gifenc`, `jpeg-js` at runtime; the root entry loads only `uniform-resources`, `fast-png` and `jpeg-js`. The QR encoder (`src/qr/`) is derived from the Rust [`qrcode`](https://crates.io/crates/qrcode) crate (MIT/Apache-2.0) and the GIF quantiser (`src/neuquant.ts`) from the Rust [`color_quant`](https://crates.io/crates/color_quant) crate (MIT), so symbols and animated frames are the reference's.
 
 To build and work on this library, you'll need the following tools:
 
