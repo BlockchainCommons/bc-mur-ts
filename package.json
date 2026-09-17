@@ -126,6 +126,14 @@
   "engines": {
     "node": ">=22.12"
   },
+  "dependencies": {
+    "@blockchaincommons/uniform-resources": "^1.0.0-beta.3",
+    "@resvg/resvg-wasm": "^2.6.2",
+    "commander": "^15.0.0",
+    "fast-png": "^8.0.0",
+    "gifenc": "^1.0.3",
+    "jpeg-js": "^0.4.4"
+  },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",
     "@blockchaincommons/dcbor": "^1.0.0-beta.3",
@@ -149,14 +157,6 @@
     "typescript": "^7.0.2",
     "typescript6": "npm:typescript@^6.0.3",
     "vitest": "^5.0.1"
-  },
-  "dependencies": {
-    "@blockchaincommons/uniform-resources": "^1.0.0-beta.1",
-    "@resvg/resvg-wasm": "^2.6.2",
-    "commander": "^15.0.0",
-    "fast-png": "^8.0.0",
-    "gifenc": "^1.0.3",
-    "jpeg-js": "^0.4.4"
   },
   "bin": {
     "mur": "./dist/bin/mur.cjs"
