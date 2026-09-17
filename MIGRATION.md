@@ -188,19 +188,3 @@ options). Programmatic use moved from the `SingleCommand`/`AnimateCommand`/
 - await new SingleCommand({ ...SINGLE_DEFAULTS, urString }).exec();
 + await single({ urString });      // from "/cli"; also frames(), animate(), runCli(argv)
 ```
-
-## 9. Floors
-
-| | `@bcts/multipart-ur` | `@blockchaincommons/multipart-ur` |
-|---|---|---|
-| Node | `>= 18` | `>= 22.12` |
-| TypeScript (consumers) | 6.x | `>= 5.7` |
-
-The IIFE / global-script build is gone; use the ESM or CJS entries.
-
-## 10. What did not change
-
-- The fountain part sequence and frame counts, the density limit and
-  `DEFAULT_MAX_MODULES`, every error message.
-- Parity with the Rust reference, now exact for every symbol: see
-  [`RUST_DIVERGENCES.md`](./RUST_DIVERGENCES.md).

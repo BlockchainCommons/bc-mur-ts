@@ -33,8 +33,6 @@ yarn add @blockchaincommons/multipart-ur
 bun add @blockchaincommons/multipart-ur
 ```
 
-**Requirements:** TypeScript >= 5.7 is required to consume the published types. Node >= 22.12 is required.
-
 ## Usage Instructions
 
 ```typescript
@@ -76,8 +74,6 @@ try {
 | `/prores` | `encodeProres(frames, { fps, outputPath })` | `ffmpeg` on `PATH` | Node |
 | `/cli` | `program`, `runCli`, `single`, `animate`, `frames` | `commander` | Node |
 
-The QR symbols are the Rust reference's, module for module: the encoder is a port of the `qrcode` crate (mixed-mode segmentation, its mask selection), and the harness in `tests/rust-validation` proves it on every vector. Every numeric argument is validated: out-of-range, fractional or `NaN` values throw `InvalidParameter` (`InvalidColor` for colours) rather than being masked or clamped.
-
 The `mur` command line (`mur single`, `mur animate`, `mur frames`) is installed with the package; usage errors exit 2, other errors 1.
 
 Runnable examples live in the [`examples/`](https://github.com/BlockchainCommons/bc-mur-ts/tree/master/examples) directory: `single-png.ts`, `animated-gif.ts`, `svg-logo.ts`, `frames-to-disk.ts` (`bun examples/<name>.ts`).
@@ -88,7 +84,7 @@ Runnable examples live in the [`examples/`](https://github.com/BlockchainCommons
 
 ### Version History
 
-- **1.0.0-beta.3 (September 16, 2026)** - PNG logos decode exactly as the reference does (palettes, `tRNS`, 16-bit); PNG and JPEG only; the reference's GIF delay saturation, JPEG quality clamp and messages; `Color.fromHex`; the enum parsers on the root entry.
+- **1.0.0-beta.3 (September 17, 2026)** - PNG logos decode as palettes, `tRNS`, 16-bit; PNG and JPEG only; the GIF delay saturation, JPEG quality clamp and messages; `Color.fromHex`; the enum parsers on the root entry.
 - **1.0.0-beta.2 (September 16, 2026)** - In-house QR encoder matching the Rust reference module for module; validated argument domains; typed error details; exact SVG placement; CLI exit statuses.
 - **1.0.0-beta.1 (September 9, 2026)** - Initial beta implementation.
 
@@ -104,16 +100,15 @@ Runnable examples live in the [`examples/`](https://github.com/BlockchainCommons
 To build and work on this library, you'll need the following tools:
 
 - [Node.js](https://nodejs.org/) >= 22.12 - JavaScript runtime.
-- [Bun](https://bun.sh/) - used in CI to install dependencies and run scripts (any Node-compatible package manager also works).
+- [Bun](https://bun.sh/) - used to install dependencies and run scripts (any node package manager works).
 - [TypeScript](https://www.typescriptlang.org/) >= 5.7 - language and type checker.
 
 ### Derived from ...
 
 This `bc-mur-ts` project is either derived from or was inspired by:
 
-- [BlockchainCommons/bc-mur-rust](https://github.com/BlockchainCommons/bc-mur-rust) - The reference Rust implementation, by [Wolf McNally](https://github.com/wolfmcnally).
-- [paritytech/bcts](https://github.com/paritytech/bcts) - A TypeScript port covering many Blockchain Commons' implementations, by [Parity Technologies](https://github.com/paritytech).
-
+- [BlockchainCommons/bc-sskr-rust](https://github.com/BlockchainCommons/bc-sskr-rust) - The reference Rust implementation, by [Wolf McNally](https://github.com/wolfmcnally).
+- [paritytech/bcts](https://github.com/paritytech/bcts) - A TypeScript port of many Blockchain Commons' specs, by [Parity Technologies](https://github.com/paritytech).
 ## Financial Support
 
 `bc-mur-ts` is a project of [Blockchain Commons](https://www.blockchaincommons.com/). We are proudly a "not-for-profit" social benefit corporation committed to open source & open development. Our work is funded entirely by donations and collaborative partnerships with people like you. Every contribution will be spent on building open tools, technologies, and techniques that sustain and advance blockchain and internet security infrastructure and promote an open web.
