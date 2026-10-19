@@ -2,12 +2,19 @@
  * Copyright © 2026 Blockchain Commons, LLC
  */
 
-import { GIFEncoder } from "gifenc";
+import * as gifenc from "gifenc";
 import { MurError, messageOf } from "./error.js";
 import type { QrFrame } from "./frames.js";
 import { expectNumeric } from "./guards.js";
 import { expectImage } from "./image.js";
 import { NeuQuant } from "./neuquant.js";
+
+/**
+ * The gifenc encoder factory. Bundlers and Bun load the ES module build of
+ * gifenc, which has the named export. Node loads the CommonJS build, and an ES
+ * module gets that build only as its `default` export.
+ */
+const GIFEncoder = gifenc.GIFEncoder ?? (gifenc.default as unknown as typeof gifenc).GIFEncoder;
 
 /** Animated-GIF timing. */
 export interface GifOptions {
