@@ -84,6 +84,7 @@ Runnable examples live in the [`examples/`](https://github.com/BlockchainCommons
 
 ### Version History
 
+- **1.0.0-beta.5 (October 19, 2026)** - `/gif` and `/cli` load as ES modules in plain Node, where the `gifenc` named import failed; installs with npm on a host without Bun, with its `@blockchaincommons/*` dependencies at 1.0.0-beta.5 ([bc-components-ts#11](https://github.com/BlockchainCommons/bc-components-ts/issues/11)).
 - **1.0.0-beta.3 (September 17, 2026)** - PNG logos decode as palettes, `tRNS`, 16-bit; PNG and JPEG only; the GIF delay saturation, JPEG quality clamp and messages; `Color.fromHex`; the enum parsers on the root entry.
 - **1.0.0-beta.2 (September 16, 2026)** - In-house QR encoder matching the Rust reference module for module; validated argument domains; typed error details; exact SVG placement; CLI exit statuses.
 - **1.0.0-beta.1 (September 9, 2026)** - Initial beta implementation.
