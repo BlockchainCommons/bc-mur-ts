@@ -13,10 +13,11 @@
  * sets identical; only a behavioural test in a consumer catches that.
  */
 
+import { execFileSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..");
@@ -62,6 +63,23 @@ describe.skipIf(!built)("dist packaging", () => {
     for (const ext of ["mjs", "cjs", "d.mts", "d.cts"]) {
       expect(existsSync(join(dist, `${entry}.${ext}`)), `dist/${entry}.${ext}`).toBe(true);
     }
+  });
+
+  // vitest gives CommonJS dependencies its own interop, so a separate Node
+  // process loads each entry as a consumer does. It finds a named import that
+  // only a bundler or Bun can resolve.
+  it.each(entries)("%s loads as an ES module in plain Node", (entry) => {
+    const url = pathToFileURL(join(dist, `${entry}.mjs`)).href;
+    const out = execFileSync(
+      "node",
+      [
+        "--input-type=module",
+        "-e",
+        `console.log(Object.keys(await import(${JSON.stringify(url)})).length)`,
+      ],
+      { encoding: "utf8" },
+    );
+    expect(Number(out.trim())).toBeGreaterThan(0);
   });
 
   it("the ESM root entry loads and exposes a public surface", async () => {
