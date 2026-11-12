@@ -61,7 +61,7 @@
 
     "@blockchaincommons/rand": ["@blockchaincommons/rand@1.0.0-beta.3", "", {}, "sha512-SelWiTP+Ngb2y9ZOT5deyDmGFjkP0JxJxMN3GA1UOAiV05XtDgUPMPFreU3LQ9zBpAepFajE8t7IrCf2dDQRxA=="],
 
-    "@blockchaincommons/uniform-resources": ["@blockchaincommons/uniform-resources@1.0.0-beta.3", "", { "dependencies": { "@blockchaincommons/crypto": "^1.0.0-beta.3", "@blockchaincommons/dcbor": "^1.0.0-beta.3" } }, "sha512-f5d8y81HC0QqYMQ9u+Wy1geBne5CI/5LqU9X4gLhRQIi3tP5FzP+DZa8CZdY6XzFdgVe2Ngg6h663pa2JCtQRw=="],
+    "@blockchaincommons/uniform-resources": ["@blockchaincommons/uniform-resources@1.0.0-beta.5", "", { "dependencies": { "@blockchaincommons/crypto": "^1.0.0-beta.3", "@blockchaincommons/dcbor": "^1.0.0-beta.3" } }, "sha512-2gSYkKr9HGbpR7Yslq5t/jddKkZJe6FhPZLY00IJEjDzi7p7agOtcGEDSjq63FTVJZoAPcnUeumSMnmVxbu4Pg=="],
 
     "@braidai/lang": ["@braidai/lang@1.1.2", "", {}, "sha512-qBcknbBufNHlui137Hft8xauQMTZDKdophmLFv05r2eNmdIv/MlPuP4TdUknHG68UdWLgVZwgxVe735HzJNIwA=="],
 
@@ -359,7 +359,7 @@
 
     "color-name": ["color-name@1.1.4", "", {}, "sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA=="],
 
-    "commander": ["commander@15.0.0", "", {}, "sha512-z67u4ZhzCL/Tydu1lJARtEZYWbWaN7oYLHbsuzocr6y4N6WZAagG3RQ4FW61V1/0+jImpj293XfrcYnd1qxtPg=="],
+    "commander": ["commander@15.1.0", "", {}, "sha512-cgnQ88TRrWcC7pVq46RzJVRMktu3W2RcbnoidnfBsl1bmDCBwJS/udcIZpKoCrbAYYaCqsz1yZCVIgbIaU3ddQ=="],
 
     "cross-spawn": ["cross-spawn@7.0.6", "", { "dependencies": { "path-key": "^3.1.0", "shebang-command": "^2.0.0", "which": "^2.0.1" } }, "sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA=="],
 
